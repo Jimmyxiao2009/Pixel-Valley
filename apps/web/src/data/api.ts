@@ -3,6 +3,8 @@ import type {
   DemoPersona,
   MeResponse,
   NeighborhoodView,
+  ObserverResident,
+  Post,
   StreetMineResponse,
 } from "@pixel-valley/domain";
 
@@ -67,4 +69,8 @@ export function fetchStreetMine(): Promise<StreetMineResponse> {
 
 export function fetchNeighborhood(id: string): Promise<NeighborhoodView> {
   return apiRequest<NeighborhoodView>(`/api/neighborhoods/${id}`);
+}
+
+export function fetchPost(id: string): Promise<{ post: Post; author: ObserverResident | null }> {
+  return apiRequest(`/api/posts/${id}`);
 }

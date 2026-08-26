@@ -3,6 +3,7 @@ import type { Context, Next } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import {
   createSeed,
+  deriveBubbles,
   getStreetMine,
   isDemoPersona,
   omitTruePresence,
@@ -144,7 +145,7 @@ export function createApp(now: Date = new Date()) {
       slots,
       residents: world.residents.filter((resident) => residentIds.has(resident.id)).map(omitTruePresence),
       houses: world.houses.filter((house) => houseIds.has(house.id)),
-      bubbles: [],
+      bubbles: deriveBubbles(world.posts, now, residentIds),
     };
     return c.json(payload);
   });
@@ -167,9 +168,21 @@ export function createApp(now: Date = new Date()) {
       tiles,
       houses,
       residents: world.residents.filter((resident) => residentIds.has(resident.id)).map(omitTruePresence),
-      bubbles: [],
+      bubbles: deriveBubbles(world.posts, now, residentIds),
     };
     return c.json(payload);
+  });
+
+  app.get("/api/posts/:id", requireSession, (c) => {
+    const post = world.posts.find((entry) => entry.id === c.req.param("id") && entry.deletedAt === null);
+    if (!post) {
+      return c.json(errorBody("not_found", "找不到这条帖"), 404);
+    }
+    const author = world.residents.find((entry) => entry.id === post.authorResidentId);
+    return c.json({
+      post,
+      author: author ? omitTruePresence(author) : null,
+    });
   });
 
   return app;

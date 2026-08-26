@@ -7,11 +7,21 @@ type PixelStageProps = {
   box: Letterbox;
   label: string;
   children: ReactNode;
+  panX?: number;
+  panY?: number;
 };
 
-export function PixelStage({ logicalWidth, logicalHeight, box, label, children }: PixelStageProps) {
-  const offsetX = Math.max(0, box.offsetX);
-  const offsetY = Math.max(0, box.offsetY);
+export function PixelStage({
+  logicalWidth,
+  logicalHeight,
+  box,
+  label,
+  children,
+  panX = 0,
+  panY = 0,
+}: PixelStageProps) {
+  const offsetX = Math.max(0, box.offsetX) - panX;
+  const offsetY = Math.max(0, box.offsetY) - panY;
 
   return (
     <div

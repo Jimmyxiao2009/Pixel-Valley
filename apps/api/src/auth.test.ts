@@ -111,6 +111,10 @@ describe("GET /api/street/mine and neighborhoods", () => {
     expect(body.residents.some((resident) => resident.id === RESIDENT_DOUMIAO)).toBe(false);
     expect(body.residents.some((resident) => "truePresence" in resident)).toBe(false);
     expect(JSON.stringify(body)).not.toContain("passwordHash");
+    const linBubble = body.bubbles.find((bubble) => bubble.residentId === RESIDENT_LIN);
+    expect(linBubble?.excerpt).toBe("修好了那个折磨我一周的 bug");
+    expect(linBubble?.collapsed).toBe(false);
+    expect(body.bubbles.some((bubble) => bubble.residentId === RESIDENT_DOUMIAO)).toBe(false);
   });
 
   it("persona=lin matches the frozen swapped grid", async () => {
@@ -145,5 +149,7 @@ describe("GET /api/street/mine and neighborhoods", () => {
     expect(body.houses.some((house) => house.residentId === RESIDENT_DOUMIAO)).toBe(false);
     expect(body.residents.some((resident) => resident.id === RESIDENT_DOUMIAO)).toBe(false);
     expect(body.tiles.some((tile) => tile.kind === "bus-stop")).toBe(true);
+    expect(body.bubbles.some((bubble) => bubble.residentId === RESIDENT_LIN)).toBe(true);
+    expect(body.bubbles.some((bubble) => bubble.residentId === RESIDENT_DOUMIAO)).toBe(false);
   });
 });
