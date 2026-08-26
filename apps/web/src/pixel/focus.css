@@ -11,4 +11,6 @@
 .pv-focus-ring:focus-visible {
   outline: 2px solid var(--pv-focus-ring);
   outline-offset: 2px;
+  /* Ink spacer so the cream ring stays visible on --pv-wall. */
+  box-shadow: 0 0 0 2px var(--pv-ink);
 }

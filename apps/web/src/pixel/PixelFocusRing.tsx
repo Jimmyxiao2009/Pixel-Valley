@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
-const FOCUS_CLASS = "pv-focus-ring";
+const FOCUS_CLASS = "pv-focus-ring font-pixel";
 
 export function pixelFocusClass(className?: string): string {
   return className ? `${FOCUS_CLASS} ${className}` : FOCUS_CLASS;
