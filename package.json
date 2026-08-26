@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pnpm --filter @pixel-valley/web dev",
+    "dev": "pnpm --parallel --filter @pixel-valley/api --filter @pixel-valley/web dev",
     "build": "pnpm --filter @pixel-valley/web build",
     "test": "pnpm --recursive --if-present test",
     "typecheck": "pnpm --recursive --if-present typecheck",

@@ -284,3 +284,150 @@ a {
 .feed-scene p {
   margin: 0;
 }
+
+.session-boot {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--pv-soil);
+  color: var(--pv-paper);
+}
+
+.login-page,
+.covenant-page {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--pv-soil);
+}
+
+.login-panel,
+.covenant-panel {
+  width: min(360px, 100%);
+  padding: 24px 20px;
+  background: var(--pv-paper);
+  color: var(--pv-ink);
+  border: 4px solid var(--pv-ink);
+  box-shadow: 8px 8px 0 var(--pv-ink);
+}
+
+.covenant-panel {
+  width: min(480px, 100%);
+}
+
+.login-panel h1,
+.covenant-panel h1 {
+  margin: 0 0 8px;
+  text-align: center;
+  font-size: 16px;
+  line-height: 16px;
+}
+
+.login-tagline {
+  margin: 0 0 16px;
+  text-align: center;
+}
+
+.login-guide {
+  margin: 0 0 16px;
+  padding: 12px;
+  background: var(--pv-wall);
+  border: 2px solid var(--pv-ink);
+}
+
+.login-guide__name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 12px;
+}
+
+.login-guide__quote {
+  margin: 0;
+  font-size: 15px;
+  line-height: 24px;
+}
+
+.login-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.login-btn {
+  width: 100%;
+  min-height: 44px;
+  border: 2px solid var(--pv-ink);
+  background: var(--pv-paper);
+  color: var(--pv-ink);
+}
+
+.login-btn--primary {
+  background: var(--pv-accent);
+  color: var(--pv-paper);
+}
+
+.login-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.login-error {
+  margin: 12px 0 0;
+  text-align: center;
+  color: var(--pv-accent);
+}
+
+.login-fine {
+  margin: 16px 0 0;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+}
+
+.login-covenant {
+  color: var(--pv-ink);
+  text-decoration: underline;
+}
+
+.ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--pv-ink);
+  color: var(--pv-paper);
+  border: 2px solid var(--pv-roof-ai);
+  font-size: 12px;
+  line-height: 12px;
+}
+
+.ai-badge__mark {
+  color: var(--pv-paper);
+}
+
+.covenant-list {
+  margin: 16px 0;
+  padding-left: 1.25em;
+}
+
+.covenant-list li + li {
+  margin-top: 8px;
+}
+
+.covenant-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 2px solid var(--pv-ink);
+  background: var(--pv-accent);
+  color: var(--pv-paper);
+}

@@ -1,0 +1,23 @@
+{
+  "name": "@pixel-valley/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/index.ts",
+    "start": "node src/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.9",
+    "@pixel-valley/domain": "workspace:*",
+    "hono": "^4.11.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "typescript": "~5.9.3",
+    "vitest": "^4.1.11"
+  }
+}
