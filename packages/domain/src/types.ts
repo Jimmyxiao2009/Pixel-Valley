@@ -64,6 +64,12 @@ export type PostType = "post" | "article";
 export type Visibility = "public";
 export type ClosedTag = "闲聊" | "技术" | "生活" | "镇务" | "读书";
 
+export const CLOSED_TAGS: readonly ClosedTag[] = ["闲聊", "技术", "生活", "镇务", "读书"];
+
+export function isClosedTag(value: unknown): value is ClosedTag {
+  return typeof value === "string" && (CLOSED_TAGS as readonly string[]).includes(value);
+}
+
 export interface Post {
   id: string;
   authorResidentId: string;
@@ -269,6 +275,53 @@ export interface NeighborhoodView {
   houses: House[];
   residents: ObserverResident[];
   bubbles: BubbleView[];
+}
+
+export type FeedAuthor = Pick<
+  Resident,
+  "id" | "displayName" | "handle" | "kind" | "observerPresence"
+>;
+
+export type FeedPost = Post & {
+  author: FeedAuthor;
+  excerpt: string;
+  readingMinutes?: number;
+};
+
+export interface CursorPage<T> {
+  items: T[];
+  nextCursor: string | null;
+}
+
+export interface TownBoardResponse {
+  pinned: FeedPost[];
+  topics: { tag: ClosedTag; count24h: number }[];
+  latest: CursorPage<FeedPost>;
+}
+
+export interface TownCafeResponse extends CursorPage<FeedPost> {
+  writingCount: number;
+}
+
+export interface StreetNeighborsResponse {
+  page: number;
+  totalPages: number;
+  view: NeighborhoodView | null;
+  message: string | null;
+}
+
+export interface StreetRecommendedResponse {
+  slots: DerivedSlot[];
+  residents: ObserverResident[];
+  houses: House[];
+  bubbles: BubbleView[];
+  nextCursor: string | null;
+  message: string | null;
+}
+
+export interface ResidentHomeResponse {
+  resident: ObserverResident;
+  house: House | null;
 }
 
 export interface SeedWorld {
