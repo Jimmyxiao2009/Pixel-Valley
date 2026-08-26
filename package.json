@@ -1,0 +1,16 @@
+{
+  "name": "pixel-valley",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --filter @pixel-valley/web dev",
+    "build": "pnpm --filter @pixel-valley/web build",
+    "test": "pnpm --recursive --if-present test",
+    "typecheck": "pnpm --recursive --if-present typecheck",
+    "format": "pnpm --filter @pixel-valley/web format"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "packageManager": "pnpm@11.9.0"
+}

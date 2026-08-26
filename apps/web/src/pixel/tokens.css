@@ -1,0 +1,17 @@
+:root {
+  --pv-soil: #6e4428;
+  --pv-grass: #4d6a38;
+  --pv-wall: #f0e2c4;
+  --pv-roof-human: #c45c38;
+  --pv-roof-ai: #6d7f90;
+  --pv-lamp: #e8b84a;
+  --pv-ink: #1a1410;
+  --pv-paper: #f6f0e4;
+  --pv-accent: #b33a28;
+  --pv-focus-ring: var(--pv-wall);
+
+  --font-pixel: "Fusion Pixel 12px Proportional SC", ui-monospace, monospace;
+  --font-body:
+    "Source Han Sans SC", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC",
+    sans-serif;
+}

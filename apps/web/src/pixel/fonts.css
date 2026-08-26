@@ -1,0 +1,23 @@
+@font-face {
+  font-family: "Fusion Pixel 12px Proportional SC";
+  src: url("./fonts/fusion-pixel-12px-proportional-zh_hans.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+.font-pixel {
+  font-family: var(--font-pixel);
+  font-size: 16px;
+  line-height: 16px;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: unset;
+}
+
+.font-body {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 24px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

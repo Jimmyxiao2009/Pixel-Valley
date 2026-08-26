@@ -1,0 +1,14 @@
+.pv-focus-ring {
+  box-sizing: border-box;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.pv-focus-ring:focus {
+  outline: none;
+}
+
+.pv-focus-ring:focus-visible {
+  outline: 2px solid var(--pv-focus-ring);
+  outline-offset: 2px;
+}
