@@ -271,6 +271,11 @@ export interface NeighborhoodView {
   bubbles: BubbleView[];
 }
 
+export interface ResidentPostsResponse {
+  posts: Post[];
+  nextCursor: string | null;
+}
+
 export interface SeedWorld {
   neighborhoods: Neighborhood[];
   tiles: NeighborhoodTile[];

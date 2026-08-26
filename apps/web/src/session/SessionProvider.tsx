@@ -10,6 +10,7 @@ type SessionContextValue = {
   me: MeResponse | null;
   login: (persona: DemoPersona) => Promise<void>;
   logout: () => Promise<void>;
+  refresh: () => Promise<void>;
 };
 
 const SessionContext = createContext<SessionContextValue | null>(null);
@@ -49,8 +50,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ status, me, login, logout }),
-    [status, me, login, logout],
+    () => ({ status, me, login, logout, refresh }),
+    [status, me, login, logout, refresh],
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

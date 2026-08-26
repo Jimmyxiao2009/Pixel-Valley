@@ -1,8 +1,12 @@
 import type {
   ApiErrorBody,
+  ClosedTag,
   DemoPersona,
   MeResponse,
   NeighborhoodView,
+  ObserverResident,
+  Post,
+  ResidentPostsResponse,
   StreetMineResponse,
 } from "@pixel-valley/domain";
 
@@ -67,4 +71,24 @@ export function fetchStreetMine(): Promise<StreetMineResponse> {
 
 export function fetchNeighborhood(id: string): Promise<NeighborhoodView> {
   return apiRequest<NeighborhoodView>(`/api/neighborhoods/${id}`);
+}
+
+export function fetchResident(id: string): Promise<ObserverResident> {
+  return apiRequest<ObserverResident>(`/api/residents/${id}`);
+}
+
+export function fetchResidentPosts(id: string, cursor?: string): Promise<ResidentPostsResponse> {
+  const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
+  return apiRequest<ResidentPostsResponse>(`/api/residents/${id}/posts${query}`);
+}
+
+export function createPost(input: { content: string; tag?: ClosedTag | null }): Promise<Post> {
+  const body: { content: string; tag?: ClosedTag } = { content: input.content };
+  if (input.tag) {
+    body.tag = input.tag;
+  }
+  return apiRequest<Post>("/api/posts", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
 }
