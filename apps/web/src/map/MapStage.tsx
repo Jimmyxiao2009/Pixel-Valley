@@ -22,9 +22,9 @@ import {
   WALK_MS_PER_TILE,
 } from "./mapMetrics";
 import { MapTile } from "./MapTile";
-import { gridPath } from "./path";
 import { RoofBubble, shouldPlayBubbleRise } from "./RoofBubble";
 import { VacantLot } from "./VacantLot";
+import { startWalkPlan, type WalkPos } from "./walk";
 
 type MapStageProps = {
   lots: readonly MapLot[];
@@ -36,8 +36,6 @@ type MapStageProps = {
   ignoreClickRef: { current: boolean };
   onUi: (ui: MapUi) => void;
 };
-
-type WalkPos = { x: number; y: number; slot: number };
 
 export function MapStage({
   lots: rawLots,
@@ -87,16 +85,13 @@ export function MapStage({
 
   function startWalk(slotIndex: number): Promise<void> {
     const gen = ++walkGen.current;
-    if (reduceMotion) {
-      const snap = walkAnchor(slotIndex);
-      posRef.current = { ...snap, slot: slotIndex };
-      setPos(posRef.current);
+    const plan = startWalkPlan(posRef.current, slotIndex, reduceMotion);
+    if (plan.snap) {
+      posRef.current = plan.snap;
+      setPos(plan.snap);
       return Promise.resolve();
     }
-    const path = gridPath(posRef.current.slot, slotIndex);
-    if (path.length === 0) {
-      return Promise.resolve();
-    }
+    const path = plan.path;
 
     return new Promise((resolve) => {
       let step = 0;

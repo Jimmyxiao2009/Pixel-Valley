@@ -135,7 +135,6 @@ export function NeighborhoodScene({ mode }: NeighborhoodSceneProps) {
       panY,
       moved: false,
     };
-    event.currentTarget.setPointerCapture(event.pointerId);
   };
 
   const onHostPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -148,8 +147,11 @@ export function NeighborhoodScene({ mode }: NeighborhoodSceneProps) {
     if (!drag.moved && Math.hypot(dx, dy) < 6) {
       return;
     }
-    drag.moved = true;
-    ignoreClickRef.current = true;
+    if (!drag.moved) {
+      drag.moved = true;
+      ignoreClickRef.current = true;
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
     const nextX = Math.max(0, Math.min(overflowX, drag.panX - dx));
     const nextY = Math.max(0, Math.min(overflowY, drag.panY - dy));
     setPan({ x: nextX, y: nextY });
@@ -163,7 +165,7 @@ export function NeighborhoodScene({ mode }: NeighborhoodSceneProps) {
         ignoreClickRef.current = false;
       }, 0);
     }
-    if (drag && event.currentTarget.hasPointerCapture(event.pointerId)) {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
   };
