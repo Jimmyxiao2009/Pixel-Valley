@@ -1,8 +1,21 @@
-import type { Presence, Resident } from "./types.ts";
+import type { AiRole, Presence, Resident } from "./types.ts";
 
 const ONLINE_WINDOW_MS = 90_000;
 
-export function deriveObserverPresence(truePresence: Presence, showOnline: boolean): Presence {
+const PUBLIC_AI_ROLES = new Set<AiRole>(["guide", "librarian", "editor", "bus"]);
+
+export function isPublicServiceAi(resident: Pick<Resident, "kind" | "aiRole">): boolean {
+  return resident.kind === "ai" && resident.aiRole !== null && PUBLIC_AI_ROLES.has(resident.aiRole);
+}
+
+export function deriveObserverPresence(
+  truePresence: Presence,
+  showOnline: boolean,
+  resident?: Pick<Resident, "kind" | "aiRole">,
+): Presence {
+  if (resident && isPublicServiceAi(resident)) {
+    return "online";
+  }
   if (!showOnline) {
     return "offline";
   }
@@ -10,10 +23,13 @@ export function deriveObserverPresence(truePresence: Presence, showOnline: boole
 }
 
 export function resolveTruePresence(
-  resident: Pick<Resident, "truePresence" | "lastSeenAt">,
+  resident: Pick<Resident, "truePresence" | "lastSeenAt" | "kind" | "aiRole">,
   now: Date,
   extras: { writing: boolean; chatting: boolean },
 ): Presence {
+  if (isPublicServiceAi(resident)) {
+    return "online";
+  }
   if (resident.truePresence === "dnd") {
     return "dnd";
   }
@@ -38,6 +54,6 @@ export function withObserverFields(
   return {
     ...resident,
     truePresence,
-    observerPresence: deriveObserverPresence(truePresence, resident.privacy.showOnline),
+    observerPresence: deriveObserverPresence(truePresence, resident.privacy.showOnline, resident),
   };
 }

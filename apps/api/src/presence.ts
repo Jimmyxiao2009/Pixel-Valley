@@ -1,4 +1,5 @@
 const FOCUS_TTL_MS = 90_000;
+export const WRITING_TTL_MS = 15_000;
 
 type FocusKey = `${string}:${string}`;
 
@@ -7,20 +8,29 @@ function focusKey(residentId: string, conversationId: string): FocusKey {
 }
 
 export class MemoryPresenceAdapter {
-  private readonly writing = new Set<string>();
+  private readonly writing = new Map<string, number>();
   private readonly chattingHosts = new Set<string>();
   private readonly focus = new Map<FocusKey, { open: boolean; at: number }>();
 
-  setWriting(residentId: string, on: boolean): void {
+  setWriting(residentId: string, on: boolean, atMs?: number): void {
     if (on) {
-      this.writing.add(residentId);
-    } else {
-      this.writing.delete(residentId);
+      this.writing.set(residentId, atMs ?? Date.now());
+      return;
     }
+    if (atMs !== undefined) {
+      // composer closed: keep writing until 15s after this timestamp
+      this.writing.set(residentId, atMs);
+      return;
+    }
+    this.writing.delete(residentId);
   }
 
-  isWriting(residentId: string): boolean {
-    return this.writing.has(residentId);
+  isWriting(residentId: string, nowMs: number): boolean {
+    const at = this.writing.get(residentId);
+    if (at === undefined) {
+      return false;
+    }
+    return nowMs - at <= WRITING_TTL_MS;
   }
 
   setFocus(residentId: string, conversationId: string, open: boolean, at: number): void {

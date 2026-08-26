@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   RESIDENT_DOUMIAO,
   RESIDENT_LIN,
+  RESIDENT_QINGHE,
   RESIDENT_YOU,
   type Conversation,
   type FeedPost,
@@ -297,5 +298,83 @@ describe("REST §13.4", () => {
 
     const cafe = await app.request("/api/town/cafe", { headers: { cookie } });
     expect(cafe.status).toBe(200);
+  });
+
+  it("keeps public-service AI knockable after the human 90s window", async () => {
+    const { app, advance } = createHarness();
+    const { cookie } = await login(app);
+    advance(2 * 60 * 1000);
+    const home = await app.request(`/api/residents/${RESIDENT_QINGHE}`, { headers: { cookie } });
+    expect(home.status).toBe(200);
+    const body = (await home.json()) as ResidentHomeResponse;
+    expect(body.resident.observerPresence).toBe("online");
+
+    const created = await app.request("/api/conversations", {
+      method: "POST",
+      headers: { cookie, "content-type": "application/json" },
+      body: JSON.stringify({ peerResidentId: RESIDENT_QINGHE }),
+    });
+    expect(created.status).toBe(201);
+    const payload = (await created.json()) as { via: string };
+    expect(payload.via).toBe("knock");
+  });
+
+  it("lights only the knock host when the visitor focuses chat", async () => {
+    const { app } = createHarness();
+    const lin = await login(app, "lin");
+    const you = await login(app, "you");
+    const created = await app.request("/api/conversations", {
+      method: "POST",
+      headers: { cookie: you.cookie, "content-type": "application/json" },
+      body: JSON.stringify({ peerResidentId: RESIDENT_LIN }),
+    });
+    const payload = (await created.json()) as { conversation: Conversation };
+    await app.request(`/api/conversations/${payload.conversation.id}/messages`, {
+      method: "POST",
+      headers: { cookie: you.cookie, "content-type": "application/json" },
+      body: JSON.stringify({ content: "在吗" }),
+    });
+
+    await app.request(`/api/conversations/${payload.conversation.id}/focus`, {
+      method: "PUT",
+      headers: { cookie: you.cookie, "content-type": "application/json" },
+      body: JSON.stringify({ open: true }),
+    });
+
+    const hostPeek = await app.request(`/api/residents/${RESIDENT_LIN}`, { headers: { cookie: you.cookie } });
+    const host = (await hostPeek.json()) as ResidentHomeResponse;
+    expect(host.resident.observerPresence).toBe("chatting");
+
+    const visitorMe = await app.request("/api/me", { headers: { cookie: you.cookie } });
+    const visitor = (await visitorMe.json()) as MeResponse;
+    expect(visitor.resident.truePresence).not.toBe("chatting");
+
+    await app.request(`/api/conversations/${payload.conversation.id}/focus`, {
+      method: "PUT",
+      headers: { cookie: lin.cookie, "content-type": "application/json" },
+      body: JSON.stringify({ open: true }),
+    });
+    const visitorPeek = await app.request(`/api/residents/${RESIDENT_YOU}`, { headers: { cookie: lin.cookie } });
+    const asHost = (await visitorPeek.json()) as ResidentHomeResponse;
+    expect(asHost.resident.observerPresence).not.toBe("chatting");
+  });
+
+  it("drops writing 15s after the last activity timestamp", async () => {
+    const { app, advance } = createHarness();
+    const { cookie } = await login(app);
+    const writing = await app.request("/api/me/presence", {
+      method: "PATCH",
+      headers: { cookie, "content-type": "application/json" },
+      body: JSON.stringify({ activity: "writing" }),
+    });
+    expect(((await writing.json()) as MeResponse).resident.truePresence).toBe("writing");
+
+    advance(14_000);
+    const still = await app.request("/api/me", { headers: { cookie } });
+    expect(((await still.json()) as MeResponse).resident.truePresence).toBe("writing");
+
+    advance(2_000);
+    const after = await app.request("/api/me", { headers: { cookie } });
+    expect(((await after.json()) as MeResponse).resident.truePresence).toBe("online");
   });
 });

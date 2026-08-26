@@ -295,9 +295,9 @@ export function createApp(nowOrOptions: Date | CreateAppOptions = {}) {
         presence.setWriting(actor.id, false);
       }
     } else if (body.activity === "writing") {
-      presence.setWriting(actor.id, true);
+      presence.setWriting(actor.id, true, clock().getTime());
     } else if (body.activity === null) {
-      presence.setWriting(actor.id, false);
+      presence.setWriting(actor.id, false, clock().getTime());
     } else {
       return c.json(errorBody("validation_error", "请求读不出来"), 400);
     }
@@ -855,9 +855,8 @@ export function createApp(nowOrOptions: Date | CreateAppOptions = {}) {
     }
     const now = clock();
     presence.setFocus(actor.id, conversation.id, open, now.getTime());
-    const hostId = otherParticipant(conversation, actor.id);
-    if (hostId) {
-      await refreshHostChatting(store, presence, hostId, now);
+    for (const participantId of conversation.participantResidentIds) {
+      await refreshHostChatting(store, presence, participantId, now);
     }
     return c.body(null, 204);
   });

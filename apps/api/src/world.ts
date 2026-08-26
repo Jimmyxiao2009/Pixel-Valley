@@ -1,5 +1,6 @@
 import {
   ageHours,
+  assertCanMessage,
   bubblesForResidents,
   computeHot,
   DECOR_SLOTS,
@@ -12,9 +13,11 @@ import {
   SLOTS,
   withObserverFields,
   type ClosedTag,
+  type Conversation,
   type DerivedSlot,
   type FeedPost,
   type House,
+  type Message,
   type NeighborhoodView,
   type ObserverResident,
   type Post,
@@ -43,7 +46,7 @@ export async function loadPresentedWorld(
     ...snap,
     residents: snap.residents.map((resident) =>
       withObserverFields(resident, now, {
-        writing: presence.isWriting(resident.id),
+        writing: presence.isWriting(resident.id, now.getTime()),
         chatting: presence.isChattingHost(resident.id),
       }),
     ),
@@ -52,7 +55,7 @@ export async function loadPresentedWorld(
 
 export function presentOne(resident: Resident, presence: MemoryPresenceAdapter, now: Date): Resident {
   return withObserverFields(resident, now, {
-    writing: presence.isWriting(resident.id),
+    writing: presence.isWriting(resident.id, now.getTime()),
     chatting: presence.isChattingHost(resident.id),
   });
 }
@@ -386,11 +389,11 @@ function rankPosts(
     if (mode === "latest") {
       score = Date.parse(post.createdAt);
     } else if (mode === "hot") {
-      score = hotScore;
+      score = cafeRecency ? cafeHotScore(hotScore, post.createdAt, now) : hotScore;
     } else if (mode === "neighbors") {
       score = Date.parse(post.createdAt);
     } else if (cafeRecency) {
-      score = hotScore * Math.exp(-ageHours(post.createdAt, now) / 6);
+      score = cafeHotScore(hotScore, post.createdAt, now);
     } else {
       const recency = Math.exp(-ageHours(post.createdAt, now) / 48);
       const neighborBoost = neighborIds.has(author.id) ? 4 : 0;
@@ -618,34 +621,80 @@ function sharedInterestCount(a: Resident, b: Resident): number {
   return b.interests.filter((interest) => mine.has(interest)).length;
 }
 
+export function cafeHotScore(hotScore: number, createdAt: string, now: Date): number {
+  return hotScore * Math.exp(-ageHours(createdAt, now) / 6);
+}
+
+/** Visitor sent the first knock/system line; the other participant is the house host. */
+export function knockRecipient(conversation: Conversation, messages: readonly Message[]): string | undefined {
+  const firstKnock = messages.find((message) => message.via === "system" || message.via === "knock");
+  if (!firstKnock) {
+    return undefined;
+  }
+  return otherParticipant(conversation, firstKnock.senderResidentId);
+}
+
+async function knockLegalFrom(
+  store: Store,
+  presence: MemoryPresenceAdapter,
+  actorId: string,
+  peerId: string,
+  now: Date,
+): Promise<boolean> {
+  const actor = await store.getResident(actorId);
+  const peer = await store.getResident(peerId);
+  if (!actor || !peer) {
+    return false;
+  }
+  let companionOwner: Resident | null = null;
+  if (peer.aiRole === "companion" && peer.ownerResidentId) {
+    companionOwner = (await store.getResident(peer.ownerResidentId)) ?? null;
+  }
+  const presentedPeer = presentOne(peer, presence, now);
+  const gate = assertCanMessage({
+    actor: presentOne(actor, presence, now),
+    peer: presentedPeer,
+    peerObserverPresence: presentedPeer.observerPresence,
+    blocked: await store.isBlockedPair(actorId, peerId),
+    companionOwner,
+  });
+  return gate.ok && gate.via === "knock";
+}
+
 export async function refreshHostChatting(
   store: Store,
   presence: MemoryPresenceAdapter,
-  hostId: string,
+  candidateId: string,
   now: Date,
 ): Promise<void> {
-  const convos = await store.listConversationsFor(hostId);
+  const convos = await store.listConversationsFor(candidateId);
   const nowMs = now.getTime();
   for (const conversation of convos) {
-    const peerId = otherParticipant(conversation, hostId);
+    const peerId = otherParticipant(conversation, candidateId);
     if (!peerId) {
+      continue;
+    }
+    const messages = await store.listMessages(conversation.id);
+    const recipient = knockRecipient(conversation, messages);
+    const legalFromPeer = await knockLegalFrom(store, presence, peerId, candidateId, now);
+    const hostId = recipient ?? (legalFromPeer ? candidateId : undefined);
+    if (hostId !== candidateId) {
       continue;
     }
     const focus = presence.getFocus(peerId, conversation.id, nowMs);
     if (!focus?.open) {
       continue;
     }
-    if (await store.isBlockedPair(hostId, peerId)) {
+    if (await store.isBlockedPair(candidateId, peerId)) {
       continue;
     }
-    const messages = await store.listMessages(conversation.id);
     const last = [...messages].reverse().find((message) => message.via !== "system");
-    if (last?.via === "knock") {
-      presence.setChattingHost(hostId, true);
+    if (last?.via === "knock" || legalFromPeer) {
+      presence.setChattingHost(candidateId, true);
       return;
     }
   }
-  presence.setChattingHost(hostId, false);
+  presence.setChattingHost(candidateId, false);
 }
 
 

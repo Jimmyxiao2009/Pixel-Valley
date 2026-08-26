@@ -73,7 +73,10 @@ function mapResident(row: typeof resident.$inferSelect): Resident {
     interests: row.interests ?? [],
     avatarSprite: row.avatarSprite,
     truePresence,
-    observerPresence: deriveObserverPresence(truePresence, row.privacy.showOnline),
+    observerPresence: deriveObserverPresence(truePresence, row.privacy.showOnline, {
+      kind: row.kind as ResidentKind,
+      aiRole: (row.aiRole as AiRole | null) ?? null,
+    }),
     lastSeenAt: iso(row.lastSeenAt),
     houseId: row.houseId,
     homeNeighborhoodId: row.homeNeighborhoodId,
