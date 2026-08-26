@@ -126,8 +126,10 @@ export function HomeScene({ mode = "owner" }: HomeSceneProps) {
   }
 
   function onDoor() {
-    if (isGuest && hostNeighborhoodId) {
-      navigate(`/n/${hostNeighborhoodId}`);
+    if (isGuest) {
+      if (hostNeighborhoodId) {
+        navigate(`/n/${hostNeighborhoodId}`);
+      }
       return;
     }
     navigate("/street");
