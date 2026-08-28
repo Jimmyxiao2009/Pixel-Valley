@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import type { ObserverResident, Post } from "@pixel-valley/domain";
+import type { Post, ResidentHomeResponse } from "@pixel-valley/domain";
 import { ChatPanel, CompanionTeaser } from "../chat/ChatPanel";
-import { fetchNeighborhood, fetchResident } from "../data/api";
-import { PixelFocusRing } from "../pixel/PixelFocusRing";
+import { fetchNeighborhood, fetchResidentHome, openConversation } from "../data/api";
+import { GuestNameplate } from "../residents/GuestNameplate";
+import { PixelFocusRing, pixelFocusClass } from "../pixel/PixelFocusRing";
 import { PixelStage } from "../pixel/PixelStage";
 import { computeLetterbox, HOME_LOGICAL_HEIGHT, HOME_LOGICAL_WIDTH } from "../pixel/integerScale";
 import { useElementSize } from "../pixel/useElementSize";
@@ -16,7 +17,7 @@ type HomeSceneProps = {
   mode?: "owner" | "guest";
 };
 
-type Overlay = "composer" | "bookshelf" | "chat" | "teaser" | null;
+type Overlay = "composer" | "bookshelf" | "chat" | "teaser" | "nameplate" | null;
 
 type HotspotId = "window" | "computer" | "door" | "bookshelf" | "cushion";
 
@@ -37,7 +38,7 @@ export function HomeScene({ mode = "owner" }: HomeSceneProps) {
   const size = useElementSize(hostRef);
   const box = computeLetterbox(size.width, size.height, HOME_LOGICAL_WIDTH, HOME_LOGICAL_HEIGHT);
 
-  const [host, setHost] = useState<ObserverResident | null>(null);
+  const [hostView, setHostView] = useState<ResidentHomeResponse | null>(null);
   const [neighborhoodName, setNeighborhoodName] = useState<string | null>(null);
   const [hostNeighborhoodId, setHostNeighborhoodId] = useState<string | null>(null);
   const [roomError, setRoomError] = useState(false);
@@ -49,10 +50,14 @@ export function HomeScene({ mode = "owner" }: HomeSceneProps) {
   const wowFiredRef = useRef(false);
 
   const self = me?.resident ?? null;
+  const host = hostView?.resident ?? null;
   const roomResident = isGuest ? host : self;
   const heading = isGuest ? "访客房" : "我的家";
   const needsGuide = !isGuest && self?.onboarding.firstPostAt === null;
-  const hasCompanion = !isGuest && Boolean(self?.companionResidentId);
+  const hasCompanion = isGuest
+    ? Boolean(host?.companionResidentId) && Boolean(host?.privacy.companionVisible)
+    : Boolean(self?.companionResidentId);
+  const companionName = isGuest ? "Ta 的伙伴" : "豆苗";
   const windowName = neighborhoodName ? `窗外是${neighborhoodName}` : "窗";
 
   useEffect(() => {
@@ -70,18 +75,15 @@ export function HomeScene({ mode = "owner" }: HomeSceneProps) {
             setRoomError(true);
             return;
           }
-          const person = await fetchResident(residentId);
+          // One read: the resident view already carries house + neighbourhood,
+          // so the guest room no longer refetches the whole street for a name.
+          const view = await fetchResidentHome(residentId);
           if (cancelled) {
             return;
           }
-          setHost(person);
-          setHostNeighborhoodId(person.homeNeighborhoodId);
-          if (person.homeNeighborhoodId) {
-            const view = await fetchNeighborhood(person.homeNeighborhoodId);
-            if (!cancelled) {
-              setNeighborhoodName(view.neighborhood.name);
-            }
-          }
+          setHostView(view);
+          setHostNeighborhoodId(view.resident.homeNeighborhoodId);
+          setNeighborhoodName(view.neighborhood?.name ?? null);
           return;
         }
         if (resident.homeNeighborhoodId) {
@@ -152,6 +154,23 @@ export function HomeScene({ mode = "owner" }: HomeSceneProps) {
     openOverlay("teaser");
   }
 
+  function onWindow() {
+    // Owner: the window is read-only scenery. Guest: it is the host's
+    // nameplate wall (§4.4), which also carries the knock / note door.
+    if (isGuest && hostView) {
+      openOverlay("nameplate");
+    }
+  }
+
+  function onGuestMessage(via: "knock" | "note") {
+    if (!host) {
+      return;
+    }
+    setOverlay(null);
+    setToast(via === "knock" ? "你敲了门。" : "纸条夹进门缝了。");
+    void openConversation(host.id).catch(() => setToast("这扇门暂时敲不开。"));
+  }
+
   async function onPublished(post: Post) {
     // t=0 success feedback, before any await, so it never waits on the network.
     setOverlay(null);
@@ -192,7 +211,7 @@ export function HomeScene({ mode = "owner" }: HomeSceneProps) {
       case "cushion":
         return hasCompanion ? "和豆苗打个招呼" : "以后在这里养一个伙伴";
       case "window":
-        return windowName;
+        return isGuest ? "看看门牌上写了什么" : windowName;
     }
   }
 
@@ -220,6 +239,21 @@ export function HomeScene({ mode = "owner" }: HomeSceneProps) {
             重试
           </button>
         </p>
+      ) : null}
+
+      {isGuest ? (
+        <div className="guest-bar">
+          <p className="guest-bar__who font-pixel">
+            {host ? `在${host.displayName}家做客` : "正在敲门…"}
+          </p>
+          <button
+            type="button"
+            className={pixelFocusClass("guest-bar__back")}
+            onClick={() => navigate("/street")}
+          >
+            回我的街
+          </button>
+        </div>
       ) : null}
 
       <div ref={hostRef} className={overlay === "composer" ? "pv-stage-host is-dim" : "pv-stage-host"}>
@@ -259,6 +293,8 @@ export function HomeScene({ mode = "owner" }: HomeSceneProps) {
                       onBookshelf();
                     } else if (spot.id === "cushion") {
                       onCushion();
+                    } else if (spot.id === "window") {
+                      onWindow();
                     }
                   }}
                 >
@@ -286,7 +322,18 @@ export function HomeScene({ mode = "owner" }: HomeSceneProps) {
           onClose={() => setOverlay(null)}
         />
       ) : null}
-      {overlay === "chat" ? <ChatPanel peerName="豆苗" onClose={() => setOverlay(null)} /> : null}
+      {overlay === "nameplate" && hostView ? (
+        <div className="pv-overlay">
+          <GuestNameplate
+            view={hostView}
+            onMessage={onGuestMessage}
+            onClose={() => setOverlay(null)}
+          />
+        </div>
+      ) : null}
+      {overlay === "chat" ? (
+        <ChatPanel peerName={companionName} onClose={() => setOverlay(null)} />
+      ) : null}
       {overlay === "teaser" ? <CompanionTeaser onClose={() => setOverlay(null)} /> : null}
 
       {toast ? (
