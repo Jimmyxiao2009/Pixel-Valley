@@ -3,7 +3,9 @@ import type {
   ClosedTag,
   Conversation,
   ConversationListItem,
+  CursorPage,
   DemoPersona,
+  FeedPost,
   MeResponse,
   Message,
   NeighborEdge,
@@ -14,6 +16,8 @@ import type {
   ResidentHomeResponse,
   ResidentPostsResponse,
   StreetMineResponse,
+  TownBoardResponse,
+  TownCafeResponse,
 } from "@pixel-valley/domain";
 
 export class ApiError extends Error {
@@ -170,6 +174,39 @@ export function setConversationFocus(conversationId: string, open: boolean): Pro
   return apiRequest<void>(`/api/conversations/${conversationId}/focus`, {
     method: "PUT",
     body: JSON.stringify({ open }),
+  });
+}
+
+export type TownZoneId = "plaza" | "board" | "library" | "cafe";
+
+export type TownZoneResponse = {
+  plaza: CursorPage<FeedPost>;
+  board: TownBoardResponse;
+  library: CursorPage<FeedPost>;
+  cafe: TownCafeResponse;
+};
+
+/**
+ * §4.10 / §7.3: four zones, four HTTP resources, one call site. `sort` and
+ * `tag` are per-zone query params the server already understands.
+ */
+export function fetchTownZone<Z extends TownZoneId>(
+  zone: Z,
+  options: { sort?: string; tag?: string; cursor?: string; signal?: AbortSignal } = {},
+): Promise<TownZoneResponse[Z]> {
+  const query = new URLSearchParams();
+  if (options.sort) {
+    query.set("sort", options.sort);
+  }
+  if (options.tag) {
+    query.set("tag", options.tag);
+  }
+  if (options.cursor) {
+    query.set("cursor", options.cursor);
+  }
+  const suffix = query.toString() ? `?${query.toString()}` : "";
+  return apiRequest<TownZoneResponse[Z]>(`/api/town/${zone}${suffix}`, {
+    signal: options.signal,
   });
 }
 

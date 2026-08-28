@@ -13,6 +13,8 @@ import type {
   StreetMineResponse,
 } from "@pixel-valley/domain";
 import { BusStopSheet } from "../map/BusStopSheet";
+import { BusTransition } from "../town/BusTransition";
+import type { TownZoneId } from "../data/api";
 import { MapStage } from "../map/MapStage";
 import type { MapUi } from "../map/intent";
 import { lotsFromCanonical, lotsFromMine, type MapLot } from "../map/lots";
@@ -21,6 +23,7 @@ import { PostDetailSheet } from "../map/PostDetailSheet";
 import { fetchNeighborhood, fetchStreetMine } from "../data/api";
 import { readWowNavState } from "../posts/wow";
 import { pixelFocusClass } from "../pixel/PixelFocusRing";
+import { ZONES } from "../town/zones";
 import { PixelStage } from "../pixel/PixelStage";
 import { computeLetterbox, MAP_LOGICAL_HEIGHT, MAP_LOGICAL_WIDTH } from "../pixel/integerScale";
 import { useElementSize } from "../pixel/useElementSize";
@@ -69,6 +72,8 @@ export function NeighborhoodScene({ mode }: NeighborhoodSceneProps) {
   const [canonical, setCanonical] = useState<NeighborhoodView | null>(null);
   const [ui, setUi] = useState<MapUi | null>(null);
   const [vacantToast, setVacantToast] = useState(false);
+  // §3.8: the ride is a curtain over a navigation that is already decided.
+  const [ridingTo, setRidingTo] = useState<TownZoneId | null>(null);
 
   const homeNeighborhoodId = me?.resident.homeNeighborhoodId ?? null;
   const showMap = slice === null || slice === "mine";
@@ -394,9 +399,27 @@ export function NeighborhoodScene({ mode }: NeighborhoodSceneProps) {
             />
           ) : null}
           {ui.type === "bus" ? (
-            <BusStopSheet stopName={streetName} onClose={() => setUi(null)} />
+            <BusStopSheet
+              stopName={streetName}
+              onRide={(zone) => {
+                setUi(null);
+                setRidingTo(zone);
+              }}
+              onClose={() => setUi(null)}
+            />
           ) : null}
         </div>
+      ) : null}
+
+      {ridingTo ? (
+        <BusTransition
+          destination={ZONES[ridingTo].title}
+          onDone={() => {
+            const zone = ridingTo;
+            setRidingTo(null);
+            navigate(`/town/${zone}`);
+          }}
+        />
       ) : null}
     </div>
   );

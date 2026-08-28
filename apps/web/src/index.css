@@ -1176,3 +1176,350 @@ a {
   background: transparent;
   color: var(--pv-accent);
 }
+
+/* ── §4.8 BusTransition ────────────────────────────────────────────── */
+
+.bus-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: var(--pv-soil);
+}
+
+.bus-transition__say {
+  margin: 0;
+  color: var(--pv-paper);
+  font-size: 16px;
+}
+
+.bus-transition__road {
+  position: relative;
+  width: min(320px, 80vw);
+  height: 32px;
+  overflow: hidden;
+  border-top: 4px solid var(--pv-paper);
+  border-bottom: 4px solid var(--pv-paper);
+  background: var(--pv-ink);
+}
+
+.bus-transition__bus {
+  position: absolute;
+  top: 6px;
+  left: -48px;
+  width: 48px;
+  height: 20px;
+  background: var(--pv-lamp);
+  border: 2px solid var(--pv-ink);
+  animation: pv-bus-drive 1000ms linear forwards;
+}
+
+@keyframes pv-bus-drive {
+  to {
+    left: 100%;
+  }
+}
+
+.bus-transition__skip {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 2px solid var(--pv-paper);
+  background: transparent;
+  color: var(--pv-paper);
+}
+
+.bus-timetable {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.bus-timetable__stop {
+  min-height: 44px;
+  padding: 0 10px;
+  border: 2px solid var(--pv-ink);
+  background: var(--pv-wall);
+  color: var(--pv-ink);
+  font-family: var(--font-pixel);
+}
+
+/* ── §4.9 / §4.10 Town ─────────────────────────────────────────────── */
+
+.town {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto;
+  background: var(--pv-paper);
+}
+
+.town-skyline {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  padding: 8px;
+  min-height: 72px;
+  background: var(--pv-ink);
+}
+
+.town-skyline__building {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 56px;
+  min-height: 44px;
+  padding: 4px;
+  color: var(--pv-paper);
+  border: 2px solid transparent;
+}
+
+.town-skyline__building.is-active {
+  border-color: var(--pv-lamp);
+  background: var(--pv-accent);
+}
+
+.town-skyline__roof {
+  display: block;
+  width: 32px;
+  height: 20px;
+  border: 2px solid var(--pv-paper);
+}
+
+.town-skyline__roof--plaza { background: var(--pv-lamp); }
+.town-skyline__roof--board { background: var(--pv-accent); }
+.town-skyline__roof--library { background: var(--pv-roof-ai); }
+.town-skyline__roof--cafe { background: var(--pv-grass); }
+
+.town-skyline__label {
+  font-size: 12px;
+}
+
+.town-skyline__back {
+  margin-left: auto;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 2px solid var(--pv-paper);
+  background: transparent;
+  color: var(--pv-paper);
+}
+
+.town-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  padding: 12px;
+  border-bottom: 2px solid var(--pv-ink);
+}
+
+.town-header__title {
+  margin: 0;
+  font-size: 16px;
+}
+
+.town-header__tagline {
+  margin: 0;
+  flex: 1 1 auto;
+}
+
+.town-header__aside {
+  margin: 0;
+  font-size: 12px;
+}
+
+.town-header__compose {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 2px solid var(--pv-ink);
+  background: var(--pv-accent);
+  color: var(--pv-paper);
+}
+
+.town-sorts {
+  display: flex;
+  gap: 4px;
+  padding: 8px 12px;
+}
+
+.town-sorts__tab {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 2px solid var(--pv-ink);
+  background: var(--pv-paper);
+  color: var(--pv-ink);
+  font-family: var(--font-pixel);
+}
+
+.town-sorts__tab.is-active {
+  background: var(--pv-lamp);
+}
+
+.town-topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0 12px 8px;
+  list-style: none;
+}
+
+.town-topics__item {
+  padding: 2px 6px;
+  border: 2px solid var(--pv-ink);
+  background: var(--pv-wall);
+  font-size: 12px;
+}
+
+.town-feed {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 12px;
+}
+
+.town-feed__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.town-card {
+  margin-bottom: 12px;
+  padding: 8px;
+  border: 2px solid var(--pv-ink);
+  background: var(--pv-paper);
+  box-shadow: 4px 4px 0 var(--pv-ink);
+}
+
+.town-card--skeleton {
+  height: 96px;
+  background: var(--pv-wall);
+  opacity: 0.5;
+}
+
+.town-card--compact {
+  padding: 6px 8px;
+}
+
+.town-card__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.town-card__author {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--pv-ink);
+  text-align: left;
+}
+
+.town-card__nameplate {
+  display: flex;
+  flex-direction: column;
+}
+
+.town-card__name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.town-card__presence {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.town-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font-size: 12px;
+}
+
+.town-card__pin,
+.town-card__hot,
+.town-card__tag {
+  padding: 1px 4px;
+  border: 2px solid var(--pv-ink);
+  background: var(--pv-lamp);
+}
+
+.town-card__body {
+  display: block;
+  width: 100%;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: var(--pv-ink);
+  text-align: left;
+}
+
+.town-card__title {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.town-card__text {
+  display: block;
+  word-break: break-word;
+}
+
+.town-card--reading .town-card__text {
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.town-card__reading {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.town-card__foot {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+  font-size: 12px;
+}
+
+.town-feed__empty,
+.town-feed__error {
+  padding: 12px 0;
+}
+
+.town-feed__retry,
+.town-feed__more {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 2px solid var(--pv-ink);
+  background: var(--pv-paper);
+  color: var(--pv-ink);
+  font-family: var(--font-pixel);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bus-transition__bus {
+    animation: none;
+  }
+}
