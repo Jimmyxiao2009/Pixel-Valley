@@ -143,6 +143,18 @@ a {
   line-height: 16px;
 }
 
+/* §2.2: the only unread badge in the product. Text carries it; the tile is
+   decoration, and the accessible name says "信箱，N 条未读". */
+.world-nav__unread {
+  margin-left: 6px;
+  padding: 1px 4px;
+  border: 2px solid var(--pv-ink);
+  background: var(--pv-lamp);
+  color: var(--pv-ink);
+  font-size: 12px;
+  line-height: 12px;
+}
+
 .world-nav__btn.is-active {
   color: var(--pv-paper);
   background: var(--pv-accent);

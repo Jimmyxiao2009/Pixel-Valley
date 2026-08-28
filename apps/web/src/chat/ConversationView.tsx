@@ -34,6 +34,8 @@ type ConversationViewProps = {
   onBlockToggle?: () => void;
   onClose?: () => void;
   closeLabel?: string;
+  /** Fires after the server marked this thread read. */
+  onRead?: () => void;
 };
 
 function dayKey(iso: string): string {
@@ -60,9 +62,11 @@ export function ConversationView({
   onBlockToggle,
   onClose,
   closeLabel = "关上",
+  onRead,
 }: ConversationViewProps) {
   const { status, messages, sending, sendError, send } = useConversation(conversationId, {
     blocking,
+    onRead,
   });
   const [input, setInput] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);

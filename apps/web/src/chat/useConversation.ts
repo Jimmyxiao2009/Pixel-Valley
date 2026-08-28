@@ -31,7 +31,7 @@ export type ConversationState = {
  */
 export function useConversation(
   conversationId: string | null,
-  options: { blocking?: boolean } = {},
+  options: { blocking?: boolean; onRead?: () => void } = {},
 ): ConversationState {
   const [status, setStatus] = useState<Status>("loading");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -40,6 +40,8 @@ export function useConversation(
   const [reloadToken, setReloadToken] = useState(0);
   const blockingRef = useRef(options.blocking ?? false);
   blockingRef.current = options.blocking ?? false;
+  const onReadRef = useRef(options.onRead);
+  onReadRef.current = options.onRead;
 
   useEffect(() => {
     if (!conversationId) {
@@ -56,6 +58,9 @@ export function useConversation(
         if (!cancelled) {
           setMessages(payload.messages);
           setStatus("ready");
+          // The GET marked the thread read server-side; let the shell re-read
+          // the unread total instead of guessing at it.
+          onReadRef.current?.();
         }
       })
       .catch(() => {

@@ -17,6 +17,16 @@ const fetchResidentHome = vi.fn<(id: string) => Promise<ResidentHomeResponse>>()
 const blockResident = vi.fn<(id: string) => Promise<void>>();
 const unblockResident = vi.fn<(id: string) => Promise<void>>();
 
+vi.mock("../session/SessionProvider", () => ({
+  useSession: () => ({
+    status: "authenticated" as const,
+    me: { resident: { id: "you" }, account: {}, unreadTotal: 0 },
+    login: vi.fn(),
+    logout: vi.fn(),
+    refresh: vi.fn(() => Promise.resolve(null)),
+  }),
+}));
+
 vi.mock("../data/api", () => ({
   // Declared inside the factory: vi.mock is hoisted above module scope.
   ApiError: class ApiError extends Error {
@@ -308,11 +318,14 @@ describe("blocking from the thread (§5.4)", () => {
     expect(blockResident).not.toHaveBeenCalled();
 
     fetchResidentHome.mockResolvedValue(relationView({ blocking: true }));
+    const readsBefore = fetchConversations.mock.calls.length;
     await user.click(within(confirm).getByRole("button", { name: "挡住 Ta" }));
 
     await waitFor(() => expect(blockResident).toHaveBeenCalledWith("lin"));
     // Re-read, never a local mute.
-    await waitFor(() => expect(fetchConversations).toHaveBeenCalledTimes(2));
+    await waitFor(() =>
+      expect(fetchConversations.mock.calls.length).toBeGreaterThan(readsBefore),
+    );
   });
 
   it("closes the composer the moment the block lands", async () => {

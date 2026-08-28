@@ -4,6 +4,7 @@ import type { ConversationListItem } from "@pixel-valley/domain";
 import { ConversationView, type ConversationPeer } from "../chat/ConversationView";
 import { blockResident, fetchConversations, fetchResidentHome, unblockResident } from "../data/api";
 import { pixelFocusClass } from "../pixel/PixelFocusRing";
+import { useSession } from "../session/SessionProvider";
 import { ResidentAvatar } from "../residents/ResidentAvatar";
 import { AiBadge } from "../ai/AiBadge";
 
@@ -29,6 +30,7 @@ function relativeDay(iso: string, today: string): string {
  */
 export function MailScene() {
   const [params, setParams] = useSearchParams();
+  const { refresh } = useSession();
   const selectedId = params.get("c");
   const [status, setStatus] = useState<Status>("loading");
   const [items, setItems] = useState<ConversationListItem[]>([]);
@@ -38,6 +40,13 @@ export function MailScene() {
   const today = new Date().toISOString().slice(0, 10);
 
   const reload = useCallback(() => setReloadToken((value) => value + 1), []);
+
+  // Reading a thread changes unread on the server, so re-read both the list
+  // and the session total that WorldNav renders.
+  const onThreadRead = useCallback(() => {
+    reload();
+    void refresh();
+  }, [reload, refresh]);
 
   useEffect(() => {
     let cancelled = false;
@@ -202,6 +211,7 @@ export function MailScene() {
               blocking={relation.blocking}
               blockedBy={relation.blockedBy}
               onBlockToggle={() => setConfirmBlock(true)}
+              onRead={onThreadRead}
             />
             {confirmBlock ? (
               <div

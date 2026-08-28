@@ -1,7 +1,17 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import { WorldNav } from "../chrome/WorldNav";
+
+vi.mock("../session/SessionProvider", () => ({
+  useSession: () => ({
+    status: "authenticated" as const,
+    me: { resident: { id: "you" }, account: {}, unreadTotal: 0 },
+    login: vi.fn(),
+    logout: vi.fn(),
+    refresh: vi.fn(() => Promise.resolve(null)),
+  }),
+}));
 
 describe("frontend test harness", () => {
   it("renders a router-bound component in jsdom", () => {
