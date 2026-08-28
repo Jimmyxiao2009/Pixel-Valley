@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import type { ObserverResident } from "@pixel-valley/domain";
+import type { ObserverResident, Post } from "@pixel-valley/domain";
 import { ChatPanel, CompanionTeaser } from "../chat/ChatPanel";
 import { fetchNeighborhood, fetchResident } from "../data/api";
 import { PixelFocusRing } from "../pixel/PixelFocusRing";
@@ -8,6 +8,7 @@ import { PixelStage } from "../pixel/PixelStage";
 import { computeLetterbox, HOME_LOGICAL_HEIGHT, HOME_LOGICAL_WIDTH } from "../pixel/integerScale";
 import { useElementSize } from "../pixel/useElementSize";
 import { ComposerDialog } from "../posts/ComposerDialog";
+import { isFirstPostWow, wowNavState } from "../posts/wow";
 import { useSession } from "../session/SessionProvider";
 import { BookshelfSheet } from "./BookshelfSheet";
 
@@ -45,6 +46,7 @@ export function HomeScene({ mode = "owner" }: HomeSceneProps) {
   const [toast, setToast] = useState<string | null>(null);
   const [computerFlash, setComputerFlash] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
+  const wowFiredRef = useRef(false);
 
   const self = me?.resident ?? null;
   const roomResident = isGuest ? host : self;
@@ -150,12 +152,22 @@ export function HomeScene({ mode = "owner" }: HomeSceneProps) {
     openOverlay("teaser");
   }
 
-  function onPublished() {
+  async function onPublished(post: Post) {
+    // t=0 success feedback, before any await, so it never waits on the network.
     setOverlay(null);
     setToast("已经贴在房顶上了。出门就能看见。");
     setComputerFlash(true);
     window.setTimeout(() => setComputerFlash(false), 200);
-    void refresh();
+
+    // §3.1.A.4: the door opens by itself exactly once, and only because the
+    // server says this post was the first. wowFiredRef stops a re-render or a
+    // double submit from navigating twice.
+    const next = await refresh();
+    if (wowFiredRef.current || !isFirstPostWow(next, post)) {
+      return;
+    }
+    wowFiredRef.current = true;
+    navigate("/street", { state: wowNavState() });
   }
 
   function hotspotLabel(id: HotspotId): string {
@@ -261,7 +273,11 @@ export function HomeScene({ mode = "owner" }: HomeSceneProps) {
       <p className="pv-hint font-pixel">{hint}</p>
 
       {overlay === "composer" && !isGuest ? (
-        <ComposerDialog residentId={self.id} onClose={() => setOverlay(null)} onPublished={onPublished} />
+        <ComposerDialog
+          residentId={self.id}
+          onClose={() => setOverlay(null)}
+          onPublished={(post) => void onPublished(post)}
+        />
       ) : null}
       {overlay === "bookshelf" && roomResident ? (
         <BookshelfSheet
