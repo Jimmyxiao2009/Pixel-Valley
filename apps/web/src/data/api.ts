@@ -1,8 +1,10 @@
 import type {
   ApiErrorBody,
   ClosedTag,
+  Conversation,
   DemoPersona,
   MeResponse,
+  NeighborEdge,
   NeighborhoodView,
   ObserverResident,
   Post,
@@ -104,4 +106,30 @@ export function fetchPost(
   id: string,
 ): Promise<{ post: Post; author: ObserverResident | null; replies: Reply[] }> {
   return apiRequest(`/api/posts/${id}`);
+}
+
+export function addNeighborEdge(toResidentId: string): Promise<NeighborEdge> {
+  return apiRequest<NeighborEdge>("/api/neighbor-edges", {
+    method: "POST",
+    body: JSON.stringify({ toResidentId }),
+  });
+}
+
+export function removeNeighborEdge(toResidentId: string): Promise<void> {
+  return apiRequest<void>(`/api/neighbor-edges/${toResidentId}`, { method: "DELETE" });
+}
+
+/** §3.5: analytics only. The host never sees a visitor list. */
+export function recordVisit(hostResidentId: string): Promise<void> {
+  return apiRequest<void>("/api/visits", {
+    method: "POST",
+    body: JSON.stringify({ hostResidentId }),
+  });
+}
+
+export function openConversation(peerResidentId: string): Promise<Conversation> {
+  return apiRequest<Conversation>("/api/conversations", {
+    method: "POST",
+    body: JSON.stringify({ peerResidentId }),
+  });
 }

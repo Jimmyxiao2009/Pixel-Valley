@@ -486,3 +486,157 @@
     animation: none;
   }
 }
+
+/* ── §4.4 ResidentPeekCard ─────────────────────────────────────────── */
+
+.peek-card {
+  min-height: 280px;
+}
+
+.peek-card__head {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.peek-card__ident {
+  min-width: 0;
+}
+
+.resident-avatar {
+  flex: 0 0 auto;
+  display: inline-block;
+  text-align: center;
+  background: var(--pv-wall);
+  border: 2px solid var(--pv-ink);
+  color: var(--pv-ink);
+  font-size: 20px;
+}
+
+.resident-avatar--ai {
+  background: var(--pv-roof-ai);
+  color: var(--pv-paper);
+}
+
+.peek-card__role {
+  font-size: 12px;
+}
+
+.peek-card__presence {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+/* Status is carried by the text; the lamp is decoration, never the only cue. */
+.peek-card__lamp {
+  width: 8px;
+  height: 8px;
+  border: 2px solid var(--pv-ink);
+  background: var(--pv-paper);
+}
+
+.peek-card__lamp--online,
+.peek-card__lamp--writing,
+.peek-card__lamp--chatting {
+  background: var(--pv-lamp);
+}
+
+.peek-card__lamp--dnd {
+  background: var(--pv-accent);
+}
+
+.peek-card__where {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+
+.peek-card__tag {
+  padding: 2px 6px;
+  border: 2px solid var(--pv-ink);
+  background: var(--pv-lamp);
+  font-size: 12px;
+  line-height: 12px;
+}
+
+.peek-card__interests {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.peek-card__interest {
+  padding: 2px 6px;
+  border: 2px solid var(--pv-ink);
+  background: var(--pv-wall);
+  font-size: 12px;
+  line-height: 12px;
+}
+
+.peek-card__latest {
+  margin: 0 0 12px;
+  word-break: break-word;
+}
+
+.peek-card__error,
+.peek-card__refusal {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+
+.peek-card__error {
+  color: var(--pv-accent);
+}
+
+.peek-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.peek-card__cta {
+  margin-bottom: 0;
+}
+
+.peek-card__shut {
+  margin-top: 12px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 2px solid var(--pv-ink);
+  background: transparent;
+  color: var(--pv-ink);
+}
+
+@media (max-width: 767px) {
+  .peek-card {
+    width: 100%;
+  }
+}
+
+.peek-card__note {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 8px;
+  background: var(--pv-wall);
+  border: 2px solid var(--pv-ink);
+  font-size: 12px;
+}
+
+.peek-card__note-link {
+  color: var(--pv-accent);
+}

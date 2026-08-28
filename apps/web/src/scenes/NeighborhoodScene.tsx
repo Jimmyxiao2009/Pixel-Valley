@@ -16,7 +16,7 @@ import { BusStopSheet } from "../map/BusStopSheet";
 import { MapStage } from "../map/MapStage";
 import type { MapUi } from "../map/intent";
 import { lotsFromCanonical, lotsFromMine, type MapLot } from "../map/lots";
-import { PeekCardStub } from "../map/PeekCardStub";
+import { PeekCardHost } from "../residents/PeekCardHost";
 import { PostDetailSheet } from "../map/PostDetailSheet";
 import { fetchNeighborhood, fetchStreetMine } from "../data/api";
 import { readWowNavState } from "../posts/wow";
@@ -218,10 +218,6 @@ export function NeighborhoodScene({ mode }: NeighborhoodSceneProps) {
           ? "我的街"
           : streetName;
 
-  const peekResident =
-    ui?.type === "peek"
-      ? (residents.find((resident) => resident.id === ui.residentId) ?? null)
-      : null;
   const postBubble =
     ui?.type === "post" ? (bubbles.find((bubble) => bubble.postId === ui.postId) ?? null) : null;
   const postAuthor =
@@ -381,8 +377,12 @@ export function NeighborhoodScene({ mode }: NeighborhoodSceneProps) {
             aria-label="关闭"
             onClick={() => setUi(null)}
           />
-          {ui.type === "peek" && peekResident ? (
-            <PeekCardStub resident={peekResident} onClose={() => setUi(null)} />
+          {ui.type === "peek" ? (
+            <PeekCardHost
+              residentId={ui.residentId}
+              onClose={() => setUi(null)}
+              onRelationChanged={() => setReload((n) => n + 1)}
+            />
           ) : null}
           {ui.type === "post" && postBubble ? (
             <PostDetailSheet
