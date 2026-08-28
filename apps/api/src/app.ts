@@ -344,7 +344,12 @@ export function createApp(nowOrOptions: Date | CreateAppOptions = {}) {
 
   app.get("/api/neighborhoods/:id", requireSession, async (c) => {
     const world = await loadPresentedWorld(store, presence, clock());
-    const view = neighborhoodView(world, routeParam(c, "id"), clock());
+    const view = neighborhoodView(
+      world,
+      routeParam(c, "id"),
+      clock(),
+      c.req.query("focusResidentId"),
+    );
     if (!view) {
       return c.json(errorBody("not_found", "找不到这条街"), 404);
     }

@@ -60,7 +60,12 @@ export function presentOne(resident: Resident, presence: MemoryPresenceAdapter, 
   });
 }
 
-export function neighborhoodView(world: SeedWorld, neighborhoodId: string, now: Date): NeighborhoodView | null {
+export function neighborhoodView(
+  world: SeedWorld,
+  neighborhoodId: string,
+  now: Date,
+  focusResidentId?: string,
+): NeighborhoodView | null {
   const neighborhood = world.neighborhoods.find((entry) => entry.id === neighborhoodId);
   if (!neighborhood) {
     return null;
@@ -74,12 +79,21 @@ export function neighborhoodView(world: SeedWorld, neighborhoodId: string, now: 
   const residents = world.residents
     .filter((resident) => residentIds.has(resident.id))
     .map(omitTruePresence);
+  // Read the slot the resident already owns here. Never invent one, never
+  // reorder tiles, and never fall back to the derived my-street layout.
+  const focusHouse = focusResidentId
+    ? houses.find((house) => house.residentId === focusResidentId)
+    : undefined;
+
   return {
     neighborhood,
     tiles,
     houses,
     residents,
     bubbles: bubblesForResidents(residentIds, world.posts, now),
+    focus: focusHouse
+      ? { residentId: focusHouse.residentId, slotIndex: focusHouse.slotIndex }
+      : null,
   };
 }
 

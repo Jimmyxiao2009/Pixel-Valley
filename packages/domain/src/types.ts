@@ -269,12 +269,25 @@ export interface StreetMineResponse {
   bubbles: BubbleView[];
 }
 
+/**
+ * §12.4.2: where a requested resident actually lives on this canonical
+ * street. It is a camera hint — the tiles never move to satisfy it, and a
+ * resident who does not live here resolves to null (the camera stays on the
+ * street centre) rather than being given a slot they do not own.
+ */
+export interface NeighborhoodFocus {
+  residentId: string;
+  slotIndex: number;
+}
+
 export interface NeighborhoodView {
   neighborhood: Neighborhood;
   tiles: NeighborhoodTile[];
   houses: House[];
   residents: ObserverResident[];
   bubbles: BubbleView[];
+  /** null when no focus was asked for, or the resident is not on this street. */
+  focus: NeighborhoodFocus | null;
 }
 
 /** Doc 7.1/7.3 pagination envelope; same shape as every other cursor page. */
