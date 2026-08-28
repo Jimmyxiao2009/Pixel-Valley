@@ -20,7 +20,9 @@ export default defineConfig({
     },
   },
   test: {
-    environment: "node",
-    include: ["src/**/*.test.ts"],
+    // jsdom so scene/flow tests can render; pure logic tests are unaffected.
+    environment: "jsdom",
+    include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
+    setupFiles: ["./src/test/setup.ts"],
   },
 });
