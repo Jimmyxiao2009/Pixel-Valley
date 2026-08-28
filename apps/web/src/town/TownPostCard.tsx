@@ -64,7 +64,7 @@ export function TownPostCard({
             <span className="town-card__presence font-pixel">
               {presenceText(post.author.observerPresence, {
                 kind: post.author.kind,
-                aiRole: null,
+                aiRole: post.author.aiRole,
               })}
             </span>
           </span>

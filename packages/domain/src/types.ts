@@ -280,9 +280,10 @@ export interface NeighborhoodView {
 /** Doc 7.1/7.3 pagination envelope; same shape as every other cursor page. */
 export type ResidentPostsResponse = CursorPage<Post>;
 
+/** aiRole included so §6.3 can say 在岗 rather than 在家 for town staff. */
 export type FeedAuthor = Pick<
   Resident,
-  "id" | "displayName" | "handle" | "kind" | "observerPresence"
+  "id" | "displayName" | "handle" | "kind" | "observerPresence" | "aiRole"
 >;
 
 export type FeedPost = Post & {

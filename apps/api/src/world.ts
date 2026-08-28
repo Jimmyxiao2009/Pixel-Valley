@@ -318,6 +318,7 @@ export function toFeedPost(post: Post, author: ObserverResident, library = false
       handle: author.handle,
       kind: author.kind,
       observerPresence: author.observerPresence,
+      aiRole: author.aiRole,
     },
     excerpt: library ? lede : excerpt(post.content),
     readingMinutes: library ? readingMinutes : undefined,
