@@ -1,4 +1,6 @@
 import {
+  gateRefusalText,
+  messageActionText,
   presenceText,
   residentKindText,
   type ResidentHomeResponse,
@@ -11,11 +13,6 @@ type GuestNameplateProps = {
   view: ResidentHomeResponse;
   onMessage: (via: "knock" | "note") => void;
   onClose: () => void;
-};
-
-const MESSAGE_LABEL: Record<"knock" | "note", string> = {
-  knock: "敲门",
-  note: "留一张纸条",
 };
 
 /**
@@ -70,11 +67,11 @@ export function GuestNameplate({ view, onMessage, onClose }: GuestNameplateProps
             className={pixelFocusClass("map-sheet__action peek-card__cta")}
             onClick={() => onMessage(messageGate.via)}
           >
-            {MESSAGE_LABEL[messageGate.via]}
+            {messageActionText(messageGate.via)}
           </button>
         ) : (
           <p className="peek-card__refusal font-body" role="note">
-            {relation.blocking ? "你挡住了 Ta" : "这家谢绝访客"}
+            {gateRefusalText(messageGate.code, { blocking: relation.blocking })}
           </p>
         )}
       </div>

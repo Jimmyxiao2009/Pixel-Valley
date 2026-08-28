@@ -30,6 +30,14 @@ for (const name of ["hasPointerCapture", "setPointerCapture", "releasePointerCap
   }
 }
 
+// jsdom implements no scrolling; the conversation log pins itself to the end.
+if (!Element.prototype.scrollTo) {
+  Object.defineProperty(Element.prototype, "scrollTo", {
+    configurable: true,
+    value: () => {},
+  });
+}
+
 // jsdom has no ResizeObserver; useElementSize measures the stage with it.
 if (!window.ResizeObserver) {
   window.ResizeObserver = class {

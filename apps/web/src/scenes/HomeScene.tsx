@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { Post, ResidentHomeResponse } from "@pixel-valley/domain";
 import { ChatPanel, CompanionTeaser } from "../chat/ChatPanel";
-import { fetchNeighborhood, fetchResidentHome, openConversation } from "../data/api";
+import { useResidentConversation } from "../chat/useResidentConversation";
+import { fetchNeighborhood, fetchResidentHome } from "../data/api";
 import { GuestNameplate } from "../residents/GuestNameplate";
 import { PixelFocusRing, pixelFocusClass } from "../pixel/PixelFocusRing";
 import { PixelStage } from "../pixel/PixelStage";
@@ -48,6 +49,9 @@ export function HomeScene({ mode = "owner" }: HomeSceneProps) {
   const [computerFlash, setComputerFlash] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
   const wowFiredRef = useRef(false);
+  // One entry for every conversation this room can open: the companion
+  // cushion and the host's nameplate both go through it.
+  const conversation = useResidentConversation();
 
   const self = me?.resident ?? null;
   const selfId = self?.id ?? null;
@@ -61,6 +65,27 @@ export function HomeScene({ mode = "owner" }: HomeSceneProps) {
     : Boolean(self?.companionResidentId);
   const companionName = isGuest ? "Ta 的伙伴" : "豆苗";
   const windowName = neighborhoodName ? `窗外是${neighborhoodName}` : "窗";
+  // The cushion talks to the companion; the nameplate talks to the host.
+  const conversationPeer =
+    conversation.opened === null
+      ? null
+      : isGuest && host
+        ? {
+            id: host.id,
+            displayName: host.displayName,
+            handle: host.handle,
+            kind: host.kind,
+            aiRole: host.aiRole,
+            observerPresence: host.observerPresence,
+          }
+        : {
+            id: self?.companionResidentId ?? "",
+            displayName: companionName,
+            handle: "doumiao",
+            kind: "ai" as const,
+            aiRole: "companion" as const,
+            observerPresence: "online" as const,
+          };
 
   useEffect(() => {
     const resident = self;
@@ -149,8 +174,9 @@ export function HomeScene({ mode = "owner" }: HomeSceneProps) {
   }
 
   function onCushion() {
-    if (hasCompanion) {
-      openOverlay("chat");
+    const companionId = isGuest ? host?.companionResidentId : self?.companionResidentId;
+    if (hasCompanion && companionId) {
+      void conversation.open(companionId);
       return;
     }
     openOverlay("teaser");
@@ -164,13 +190,13 @@ export function HomeScene({ mode = "owner" }: HomeSceneProps) {
     }
   }
 
-  function onGuestMessage(via: "knock" | "note") {
+  function onGuestMessage() {
     if (!host) {
       return;
     }
     setOverlay(null);
-    setToast(via === "knock" ? "你敲了门。" : "纸条夹进门缝了。");
-    void openConversation(host.id).catch(() => setToast("这扇门暂时敲不开。"));
+    // Same door as the peek card: the server decides knock vs note.
+    void conversation.open(host.id);
   }
 
   async function onPublished(post: Post) {
@@ -335,8 +361,18 @@ export function HomeScene({ mode = "owner" }: HomeSceneProps) {
           />
         </div>
       ) : null}
-      {overlay === "chat" ? (
-        <ChatPanel peerName={companionName} onClose={() => setOverlay(null)} />
+      {conversation.opened && conversationPeer ? (
+        <ChatPanel
+          conversationId={conversation.opened.conversationId}
+          peer={conversationPeer}
+          skin={conversation.opened.skin}
+          onClose={conversation.close}
+        />
+      ) : null}
+      {conversation.error ? (
+        <p className="pv-toast font-pixel" role="alert">
+          {conversation.error}
+        </p>
       ) : null}
       {overlay === "teaser" ? <CompanionTeaser onClose={() => setOverlay(null)} /> : null}
 

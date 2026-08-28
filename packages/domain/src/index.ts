@@ -2,6 +2,7 @@ export * from "./bubbles.ts";
 export * from "./can-message.ts";
 export * from "./compose.ts";
 export * from "./excerpt.ts";
+export * from "./gate-copy.ts";
 export * from "./getStreetMine.ts";
 export * from "./handles.ts";
 export * from "./observer.ts";

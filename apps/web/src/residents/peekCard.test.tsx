@@ -12,11 +12,22 @@ const recordVisit = vi.fn<(id: string) => Promise<void>>();
 const openConversation = vi.fn<(id: string) => Promise<unknown>>();
 
 vi.mock("../data/api", () => ({
+  ApiError: class ApiError extends Error {
+    code = "unknown";
+    status = 500;
+  },
   fetchResidentHome: (id: string) => fetchResidentHome(id),
   addNeighborEdge: (id: string) => addNeighborEdge(id),
   removeNeighborEdge: (id: string) => removeNeighborEdge(id),
   recordVisit: (id: string) => recordVisit(id),
   openConversation: (id: string) => openConversation(id),
+  blockResident: vi.fn(() => Promise.resolve()),
+  unblockResident: vi.fn(() => Promise.resolve()),
+  fetchConversationMessages: vi.fn(() =>
+    Promise.resolve({ conversation: { id: "c1" }, messages: [] }),
+  ),
+  sendConversationMessage: vi.fn(),
+  setConversationFocus: vi.fn(() => Promise.resolve()),
 }));
 
 type ViewOverrides = {
@@ -87,7 +98,7 @@ beforeEach(() => {
     fn.mockReset();
   }
   recordVisit.mockResolvedValue(undefined);
-  openConversation.mockResolvedValue({});
+  openConversation.mockResolvedValue({ conversation: { id: "c1" }, via: "knock" });
 });
 
 describe("ResidentPeekCard (§4.4)", () => {
@@ -176,7 +187,7 @@ describe("ResidentPeekCard (§4.4)", () => {
     expect(await screen.findByText("你挡住了 Ta")).toBeTruthy();
   });
 
-  it("opens a conversation for a knock without leaving the street", async () => {
+  it("opens the real conversation panel for a knock, without leaving the street", async () => {
     fetchResidentHome.mockResolvedValue(view());
     const user = userEvent.setup();
     renderCard();
@@ -185,7 +196,8 @@ describe("ResidentPeekCard (§4.4)", () => {
     await user.click(screen.getByRole("button", { name: "敲门" }));
 
     await waitFor(() => expect(openConversation).toHaveBeenCalledWith("lin"));
-    expect(screen.getByText("你敲了门。")).toBeTruthy();
+    // The panel itself opens here — no dead-end toast.
+    expect(await screen.findByRole("dialog", { name: "与林的对话" })).toBeTruthy();
     expect(screen.getByTestId("probe").textContent).toBe("/street");
   });
 

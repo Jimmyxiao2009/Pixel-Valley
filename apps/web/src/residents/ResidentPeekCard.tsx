@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
+  gateRefusalText,
+  messageActionText,
   presenceText,
   residentKindText,
   type ResidentHomeResponse,
@@ -19,23 +21,8 @@ type ResidentPeekCardProps = {
   neighborError: string | null;
   onAction: (action: PeekAction) => void;
   onToggleNeighbor: () => void;
+  onBlockRequest?: () => void;
   onClose: () => void;
-};
-
-/** §15.4 copy for the door the server opened. */
-const MESSAGE_LABEL: Record<"knock" | "note", string> = {
-  knock: "敲门",
-  note: "留一张纸条",
-};
-
-/**
- * §4.4 refusal lines. The client never recomputes the §5.4 matrix — it only
- * renders whichever verdict the server already returned.
- */
-const GATE_REFUSAL: Record<"blocked" | "forbidden" | "dnd", string> = {
-  blocked: "这家谢绝访客",
-  forbidden: "这家谢绝访客",
-  dnd: "门口挂了牌子，先留纸条",
 };
 
 export function ResidentPeekCard({
@@ -44,6 +31,7 @@ export function ResidentPeekCard({
   neighborError,
   onAction,
   onToggleNeighbor,
+  onBlockRequest,
   onClose,
 }: ResidentPeekCardProps) {
   const { resident, relation, neighborhood, latestBubble, messageGate } = view;
@@ -146,11 +134,11 @@ export function ResidentPeekCard({
               onAction({ type: "message", residentId: resident.id, via: messageGate.via })
             }
           >
-            {MESSAGE_LABEL[messageGate.via]}
+            {messageActionText(messageGate.via)}
           </button>
         ) : (
           <p className="peek-card__refusal font-body" role="note">
-            {relation.blocking ? "你挡住了 Ta" : GATE_REFUSAL[messageGate.code]}
+            {gateRefusalText(messageGate.code, { blocking: relation.blocking })}
           </p>
         )}
 
@@ -171,9 +159,20 @@ export function ResidentPeekCard({
         ) : null}
       </div>
 
-      <button type="button" className={pixelFocusClass("peek-card__shut")} onClick={onClose}>
-        关门
-      </button>
+      <div className="peek-card__secondary">
+        {onBlockRequest && !isSelf && !isAi ? (
+          <button
+            type="button"
+            className={pixelFocusClass("peek-card__minor")}
+            onClick={onBlockRequest}
+          >
+            {relation.blocking ? "取消挡住" : "挡住 Ta"}
+          </button>
+        ) : null}
+        <button type="button" className={pixelFocusClass("peek-card__shut")} onClick={onClose}>
+          关门
+        </button>
+      </div>
     </div>
   );
 }

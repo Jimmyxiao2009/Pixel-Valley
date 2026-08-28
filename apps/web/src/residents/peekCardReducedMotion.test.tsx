@@ -10,11 +10,22 @@ const addNeighborEdge = vi.fn<(id: string) => Promise<unknown>>();
 const recordVisit = vi.fn<(id: string) => Promise<void>>();
 
 vi.mock("../data/api", () => ({
+  ApiError: class ApiError extends Error {
+    code = "unknown";
+    status = 500;
+  },
   fetchResidentHome: (id: string) => fetchResidentHome(id),
   addNeighborEdge: (id: string) => addNeighborEdge(id),
   removeNeighborEdge: vi.fn(),
   recordVisit: (id: string) => recordVisit(id),
-  openConversation: vi.fn(() => Promise.resolve({})),
+  openConversation: vi.fn(() => Promise.resolve({ conversation: { id: "c1" }, via: "knock" })),
+  blockResident: vi.fn(() => Promise.resolve()),
+  unblockResident: vi.fn(() => Promise.resolve()),
+  fetchConversationMessages: vi.fn(() =>
+    Promise.resolve({ conversation: { id: "c1" }, messages: [] }),
+  ),
+  sendConversationMessage: vi.fn(),
+  setConversationFocus: vi.fn(() => Promise.resolve()),
 }));
 
 /** Everything in the app reads reduced motion through this media query. */

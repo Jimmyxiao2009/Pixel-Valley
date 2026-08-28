@@ -39,6 +39,10 @@ vi.mock("../session/SessionProvider", () => ({
 }));
 
 vi.mock("../data/api", () => ({
+  ApiError: class ApiError extends Error {
+    code = "unknown";
+    status = 500;
+  },
   fetchStreetMine: () => fetchStreetMine(),
   fetchNeighborhood: () => Promise.reject(new Error("guest room must not need this")),
   fetchResidentHome: (id: string) => fetchResidentHome(id),
@@ -48,6 +52,13 @@ vi.mock("../data/api", () => ({
   openConversation: (id: string) => openConversation(id),
   addNeighborEdge: vi.fn(),
   removeNeighborEdge: vi.fn(),
+  blockResident: vi.fn(() => Promise.resolve()),
+  unblockResident: vi.fn(() => Promise.resolve()),
+  fetchConversationMessages: vi.fn(() =>
+    Promise.resolve({ conversation: { id: "c1" }, messages: [] }),
+  ),
+  sendConversationMessage: vi.fn(),
+  setConversationFocus: vi.fn(() => Promise.resolve()),
   createPost: () => createPost(),
 }));
 
@@ -129,7 +140,7 @@ beforeEach(() => {
   fetchStreetMine.mockResolvedValue(street());
   fetchResidentHome.mockResolvedValue(linView());
   recordVisit.mockResolvedValue(undefined);
-  openConversation.mockResolvedValue({});
+  openConversation.mockResolvedValue({ conversation: { id: "c1" }, via: "knock" });
 });
 
 describe("two-step visit (§3.5)", () => {

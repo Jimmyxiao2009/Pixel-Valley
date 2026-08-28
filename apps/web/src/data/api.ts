@@ -2,8 +2,10 @@ import type {
   ApiErrorBody,
   ClosedTag,
   Conversation,
+  ConversationListItem,
   DemoPersona,
   MeResponse,
+  Message,
   NeighborEdge,
   NeighborhoodView,
   ObserverResident,
@@ -127,9 +129,57 @@ export function recordVisit(hostResidentId: string): Promise<void> {
   });
 }
 
-export function openConversation(peerResidentId: string): Promise<Conversation> {
-  return apiRequest<Conversation>("/api/conversations", {
+export type OpenConversationResult = {
+  conversation: Conversation;
+  via: "knock" | "note";
+};
+
+/**
+ * §3.6 / §3.7 / KD-9: knocking and leaving a note are the same call. The
+ * server is get-or-create on the sorted participant pair, so every entry point
+ * lands in the one thread and the client never searches for it.
+ */
+export function openConversation(peerResidentId: string): Promise<OpenConversationResult> {
+  return apiRequest<OpenConversationResult>("/api/conversations", {
     method: "POST",
     body: JSON.stringify({ peerResidentId }),
   });
+}
+
+export function fetchConversations(): Promise<{ items: ConversationListItem[] }> {
+  return apiRequest<{ items: ConversationListItem[] }>("/api/conversations");
+}
+
+export function fetchConversationMessages(
+  conversationId: string,
+): Promise<{ conversation: Conversation; messages: Message[] }> {
+  return apiRequest(`/api/conversations/${conversationId}/messages`);
+}
+
+export function sendConversationMessage(
+  conversationId: string,
+  content: string,
+): Promise<Message> {
+  return apiRequest<Message>(`/api/conversations/${conversationId}/messages`, {
+    method: "POST",
+    body: JSON.stringify({ content }),
+  });
+}
+
+export function setConversationFocus(conversationId: string, open: boolean): Promise<void> {
+  return apiRequest<void>(`/api/conversations/${conversationId}/focus`, {
+    method: "PUT",
+    body: JSON.stringify({ open }),
+  });
+}
+
+export function blockResident(residentId: string): Promise<void> {
+  return apiRequest<void>("/api/blocks", {
+    method: "POST",
+    body: JSON.stringify({ residentId }),
+  });
+}
+
+export function unblockResident(residentId: string): Promise<void> {
+  return apiRequest<void>(`/api/blocks/${residentId}`, { method: "DELETE" });
 }

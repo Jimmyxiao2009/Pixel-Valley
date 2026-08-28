@@ -3,11 +3,14 @@ import { useNavigate } from "react-router-dom";
 import type { ResidentHomeResponse } from "@pixel-valley/domain";
 import {
   addNeighborEdge,
+  blockResident,
   fetchResidentHome,
-  openConversation,
   recordVisit,
   removeNeighborEdge,
+  unblockResident,
 } from "../data/api";
+import { ChatPanel } from "../chat/ChatPanel";
+import { useResidentConversation } from "../chat/useResidentConversation";
 import { pixelFocusClass } from "../pixel/PixelFocusRing";
 import { ResidentPeekCard, type PeekAction } from "./ResidentPeekCard";
 
@@ -31,14 +34,14 @@ export function PeekCardHost({ residentId, onClose, onRelationChanged }: PeekCar
   const [view, setView] = useState<ResidentHomeResponse | null>(null);
   const [pendingNeighbor, setPendingNeighbor] = useState(false);
   const [neighborError, setNeighborError] = useState<string | null>(null);
-  const [messageNote, setMessageNote] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
+  const [confirmBlock, setConfirmBlock] = useState(false);
+  const conversation = useResidentConversation();
 
   useEffect(() => {
     let cancelled = false;
     setStatus("loading");
     setNeighborError(null);
-    setMessageNote(null);
     void fetchResidentHome(residentId)
       .then((payload) => {
         if (!cancelled) {
@@ -96,15 +99,32 @@ export function PeekCardHost({ residentId, onClose, onRelationChanged }: PeekCar
         navigate(`/r/${action.residentId}`);
         return;
       }
-      // PR-7 owns the conversation panel; PR-6 only opens the thread so the
-      // knock/note actually exists server-side, then points at the mailbox.
-      setMessageNote(action.via === "knock" ? "你敲了门。" : "纸条夹进门缝了。");
-      void openConversation(action.residentId).catch(() => {
-        setMessageNote("这扇门暂时敲不开。");
-      });
+      // §3.6.3: the panel opens right here, on the real thread. The server
+      // decides knock vs note, so the caller passes no `via`.
+      void conversation.open(action.residentId);
     },
-    [navigate],
+    [navigate, conversation],
   );
+
+  const onBlockToggle = useCallback(async () => {
+    if (!view) {
+      return;
+    }
+    setConfirmBlock(false);
+    try {
+      if (view.relation.blocking) {
+        await unblockResident(view.resident.id);
+      } else {
+        await blockResident(view.resident.id);
+        // A block closes the thread that is open right now, not just later ones.
+        conversation.close();
+      }
+    } finally {
+      // Re-read: the gate verdict is the server's to recompute.
+      setReloadToken((value) => value + 1);
+      onRelationChanged?.();
+    }
+  }, [view, conversation, onRelationChanged]);
 
   if (status === "loading") {
     return (
@@ -140,15 +160,58 @@ export function PeekCardHost({ residentId, onClose, onRelationChanged }: PeekCar
         neighborError={neighborError}
         onAction={onAction}
         onToggleNeighbor={() => void onToggleNeighbor()}
+        onBlockRequest={() => setConfirmBlock(true)}
         onClose={onClose}
       />
-      {messageNote ? (
-        <p className="peek-card__note font-pixel" role="status" aria-live="polite">
-          {messageNote}
-          <a className={pixelFocusClass("peek-card__note-link")} href="/mail">
-            去信箱
-          </a>
+      {conversation.error ? (
+        <p className="peek-card__note font-pixel" role="alert">
+          {conversation.error}
         </p>
+      ) : null}
+      {confirmBlock ? (
+        <div
+          className="mail__confirm"
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="peek-confirm-title"
+        >
+          <p id="peek-confirm-title" className="font-body">
+            {view.relation.blocking
+              ? `不再挡住${view.resident.displayName}？`
+              : `挡住${view.resident.displayName}？Ta 就不能再敲门或留纸条了。`}
+          </p>
+          <button
+            type="button"
+            className={pixelFocusClass("mail__confirm-yes")}
+            onClick={() => void onBlockToggle()}
+          >
+            {view.relation.blocking ? "取消挡住" : "挡住 Ta"}
+          </button>
+          <button
+            type="button"
+            className={pixelFocusClass("mail__confirm-no")}
+            onClick={() => setConfirmBlock(false)}
+          >
+            算了
+          </button>
+        </div>
+      ) : null}
+      {conversation.opened ? (
+        <ChatPanel
+          conversationId={conversation.opened.conversationId}
+          peer={{
+            id: view.resident.id,
+            displayName: view.resident.displayName,
+            handle: view.resident.handle,
+            kind: view.resident.kind,
+            aiRole: view.resident.aiRole,
+            observerPresence: view.resident.observerPresence,
+          }}
+          skin={conversation.opened.skin}
+          blocking={view.relation.blocking}
+          blockedBy={view.relation.blockedBy}
+          onClose={conversation.close}
+        />
       ) : null}
     </>
   );
