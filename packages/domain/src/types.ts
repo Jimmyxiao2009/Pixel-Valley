@@ -290,6 +290,20 @@ export interface NeighborhoodView {
   focus: NeighborhoodFocus | null;
 }
 
+/** A reply with its author already resolved, so the sheet needs no N+1 read. */
+export interface ReplyView extends Reply {
+  author: FeedAuthor | null;
+}
+
+/** §4.11: everything the one post-detail sheet renders. */
+export interface PostDetailResponse {
+  post: Post;
+  author: ObserverResident | null;
+  replies: ReplyView[];
+  /** Whether the session resident already 拍过 this post (add-only, §4.11). */
+  reacted: boolean;
+}
+
 /** Doc 7.1/7.3 pagination envelope; same shape as every other cursor page. */
 export type ResidentPostsResponse = CursorPage<Post>;
 

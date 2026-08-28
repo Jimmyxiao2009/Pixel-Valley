@@ -11,10 +11,12 @@ import {
   shanghaiDateKey,
   validateShortPost,
   type MeResponse,
+  type PostDetailResponse,
   type PrivacyLevel,
   type Resident,
   type ResidentHomeResponse,
   type ResidentPrivacy,
+  type ReplyView,
 } from "@pixel-valley/domain";
 import { mockAiReply } from "./ai.ts";
 import {
@@ -582,11 +584,35 @@ export function createApp(nowOrOptions: Date | CreateAppOptions = {}) {
     const allReplies = await store.listAllReplies();
     // `author` kept from the PR-4 line so PostDetailSheet keeps its nameplate.
     const author = await store.getResident(post.authorResidentId);
-    return c.json({
+
+    // Resolve every reply author in one pass: the sheet must not read them
+    // back one at a time.
+    const everyone = await store.listResidents();
+    const byId = new Map(everyone.map((row) => [row.id, presentOne(row, presence, clock())]));
+    const replyViews: ReplyView[] = replies.map((reply) => {
+      const replyAuthor = byId.get(reply.authorResidentId);
+      return {
+        ...reply,
+        author: replyAuthor
+          ? {
+              id: replyAuthor.id,
+              displayName: replyAuthor.displayName,
+              handle: replyAuthor.handle,
+              kind: replyAuthor.kind,
+              observerPresence: replyAuthor.observerPresence,
+              aiRole: replyAuthor.aiRole,
+            }
+          : null,
+      };
+    });
+
+    const payload: PostDetailResponse = {
       post: withHotFlag(post, allReplies, reactions, clock()),
       author: author ? omitTruePresence(presentOne(author, presence, clock())) : null,
-      replies,
-    });
+      replies: replyViews,
+      reacted: Boolean(await store.getReaction(post.id, c.get("session").residentId)),
+    };
+    return c.json(payload);
   });
 
   app.post("/api/posts/:id/replies", requireSession, async (c) => {
