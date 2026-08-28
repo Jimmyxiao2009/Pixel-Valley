@@ -5,7 +5,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
-import { NavLink, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { NavLink, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import type {
   BubbleView,
   NeighborhoodView,
@@ -19,6 +19,7 @@ import { lotsFromCanonical, lotsFromMine, type MapLot } from "../map/lots";
 import { PeekCardStub } from "../map/PeekCardStub";
 import { PostDetailSheet } from "../map/PostDetailSheet";
 import { fetchNeighborhood, fetchStreetMine } from "../data/api";
+import { readWowNavState } from "../posts/wow";
 import { pixelFocusClass } from "../pixel/PixelFocusRing";
 import { PixelStage } from "../pixel/PixelStage";
 import { computeLetterbox, MAP_LOGICAL_HEIGHT, MAP_LOGICAL_WIDTH } from "../pixel/integerScale";
@@ -45,6 +46,9 @@ export function NeighborhoodScene({ mode }: NeighborhoodSceneProps) {
   const slice = mode === "mine" ? (readSlice(params.get("slice")) ?? "mine") : null;
   const { me } = useSession();
   const navigate = useNavigate();
+  const location = useLocation();
+  // §3.1 wow: arrived straight from the composer, so say so out loud once.
+  const wowArrival = mode === "mine" && readWowNavState(location.state);
   const reduceMotion = usePrefersReducedMotion();
   const hostRef = useRef<HTMLDivElement>(null);
   const size = useElementSize(hostRef);
@@ -351,6 +355,11 @@ export function NeighborhoodScene({ mode }: NeighborhoodSceneProps) {
               )}
             </PixelStage>
           )}
+          {wowArrival && status === "ready" ? (
+            <p className="map-toast map-toast--wow font-pixel" role="status" aria-live="polite">
+              已经贴在房顶上了。
+            </p>
+          ) : null}
           {quiet ? (
             <p className="map-toast font-pixel" role="status">
               这条街这会儿很安静
