@@ -680,3 +680,193 @@
   top: 8px;
   border-color: var(--pv-accent);
 }
+
+/* ── §4.11 PostDetailSheet ─────────────────────────────────────────── */
+
+.post-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(480px, 100%);
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.post-detail__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.post-detail__author {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--pv-ink);
+  text-align: left;
+}
+
+.post-detail__nameplate {
+  display: flex;
+  flex-direction: column;
+}
+
+.post-detail__name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.post-detail__handle {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.post-detail__close {
+  margin-left: auto;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 2px solid var(--pv-ink);
+  background: var(--pv-paper);
+  color: var(--pv-ink);
+}
+
+.post-detail__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.post-detail__tag {
+  padding: 1px 4px;
+  border: 2px solid var(--pv-ink);
+  background: var(--pv-wall);
+  opacity: 1;
+}
+
+.post-detail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.post-detail__react {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 2px solid var(--pv-ink);
+  background: var(--pv-paper);
+  color: var(--pv-ink);
+  font-family: var(--font-pixel);
+}
+
+.post-detail__react[aria-pressed="true"] {
+  background: var(--pv-lamp);
+}
+
+.post-detail__count {
+  padding: 0 4px;
+  border-left: 2px solid var(--pv-ink);
+}
+
+.post-detail__doorstep {
+  margin-bottom: 0;
+}
+
+.post-detail__error {
+  margin: 0;
+  color: var(--pv-accent);
+}
+
+.post-detail__note {
+  margin: 0;
+}
+
+.post-detail__replies-title {
+  margin: 8px 0 4px;
+  font-size: 12px;
+}
+
+.post-detail__reply-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.post-detail__reply {
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  border: 2px solid var(--pv-ink);
+  background: var(--pv-wall);
+}
+
+.post-detail__reply-body {
+  margin: 4px 0 2px;
+  word-break: break-word;
+}
+
+.post-detail__reply-time {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.post-detail__form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-end;
+  padding-top: 8px;
+  border-top: 2px solid var(--pv-ink);
+}
+
+.post-detail__field {
+  flex: 1 1 200px;
+}
+
+.post-detail__input {
+  width: 100%;
+  padding: 6px;
+  border: 2px solid var(--pv-ink);
+  background: var(--pv-paper);
+  color: var(--pv-ink);
+  resize: vertical;
+}
+
+.post-detail__count-hint {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.post-detail__send {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 2px solid var(--pv-ink);
+  background: var(--pv-accent);
+  color: var(--pv-paper);
+}
+
+/* The nested peek card sits above its own sheet. */
+.post-detail__peek {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(26, 20, 16, 0.5);
+}

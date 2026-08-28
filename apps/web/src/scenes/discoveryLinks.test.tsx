@@ -75,6 +75,30 @@ function linView(homeNeighborhoodId: string | null = "wutong"): ResidentHomeResp
   };
 }
 
+/** Matches the §4.11 detail payload the server now returns. */
+function postDetail(content: string, author: Record<string, unknown> | null) {
+  return {
+    post: {
+      id: "post-lin",
+      authorResidentId: "lin",
+      type: "post",
+      title: null,
+      content,
+      visibility: "public",
+      createdAt: new Date(Date.now() - 3_600_000).toISOString(),
+      editedAt: null,
+      deletedAt: null,
+      replyCount: 0,
+      reactionCount: 0,
+      tags: [],
+      flags: { hot: false, pinned: false, aiGenerated: false },
+    },
+    author,
+    replies: [],
+    reacted: false,
+  };
+}
+
 function Probe() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -93,11 +117,17 @@ beforeEach(() => {
   fetchResidentHome.mockReset();
   fetchPost.mockReset();
   fetchResidentHome.mockResolvedValue(linView());
-  fetchPost.mockResolvedValue({
-    post: { content: "修好了那个折磨我一周的 bug" },
-    author: { id: "lin", displayName: "林", homeNeighborhoodId: "wutong" },
-    replies: [],
-  });
+  fetchPost.mockResolvedValue(
+    postDetail("修好了那个折磨我一周的 bug", {
+      id: "lin",
+      displayName: "林",
+      handle: "lin",
+      kind: "human",
+      aiRole: null,
+      observerPresence: "online",
+      homeNeighborhoodId: "wutong",
+    }),
+  );
 });
 
 describe("peek card → their doorstep (§3.10)", () => {
@@ -212,11 +242,17 @@ describe("post detail → the author's doorstep (§4.11)", () => {
   });
 
   it("stays quiet when the server gave no author street", async () => {
-    fetchPost.mockResolvedValue({
-      post: { content: "正文" },
-      author: { id: "lin", displayName: "林", homeNeighborhoodId: null },
-      replies: [],
-    });
+    fetchPost.mockResolvedValue(
+      postDetail("正文", {
+        id: "lin",
+        displayName: "林",
+        handle: "lin",
+        kind: "human",
+        aiRole: null,
+        observerPresence: "online",
+        homeNeighborhoodId: null,
+      }),
+    );
     render(
       <MemoryRouter initialEntries={["/town/plaza"]}>
         <Routes>

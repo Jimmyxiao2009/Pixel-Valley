@@ -27,8 +27,29 @@ vi.mock("../data/api", () => ({
   },
   fetchTownZone: (zone: string, options?: Record<string, unknown>) => fetchTownZone(zone, options),
   fetchPost: vi.fn(() =>
-    Promise.resolve({ post: { content: "帖子全文在这里" }, author: null, replies: [] }),
+    Promise.resolve({
+      post: {
+        id: "plaza-1",
+        authorResidentId: "lin",
+        type: "post",
+        title: null,
+        content: "帖子全文在这里",
+        visibility: "public",
+        createdAt: new Date().toISOString(),
+        editedAt: null,
+        deletedAt: null,
+        replyCount: 0,
+        reactionCount: 0,
+        tags: [],
+        flags: { hot: false, pinned: false, aiGenerated: false },
+      },
+      author: null,
+      replies: [],
+      reacted: false,
+    }),
   ),
+  createReply: vi.fn(),
+  reactToPost: vi.fn(),
   fetchResidentHome: vi.fn(() =>
     Promise.resolve({
       resident: {

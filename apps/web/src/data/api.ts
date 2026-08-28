@@ -12,6 +12,8 @@ import type {
   NeighborhoodView,
   ObserverResident,
   Post,
+  PostDetailResponse,
+  Reaction,
   Reply,
   ResidentHomeResponse,
   ResidentPostsResponse,
@@ -118,8 +120,21 @@ export function createPost(input: { content: string; tag?: ClosedTag | null }): 
 
 export function fetchPost(
   id: string,
-): Promise<{ post: Post; author: ObserverResident | null; replies: Reply[] }> {
-  return apiRequest(`/api/posts/${id}`);
+  options: { signal?: AbortSignal } = {},
+): Promise<PostDetailResponse> {
+  return apiRequest<PostDetailResponse>(`/api/posts/${id}`, { signal: options.signal });
+}
+
+export function createReply(postId: string, content: string): Promise<Reply> {
+  return apiRequest<Reply>(`/api/posts/${postId}/replies`, {
+    method: "POST",
+    body: JSON.stringify({ content }),
+  });
+}
+
+/** §4.11: add-only. There is no un-拍, so this never toggles. */
+export function reactToPost(postId: string): Promise<Reaction> {
+  return apiRequest<Reaction>(`/api/posts/${postId}/reactions`, { method: "POST" });
 }
 
 export function addNeighborEdge(toResidentId: string): Promise<NeighborEdge> {
