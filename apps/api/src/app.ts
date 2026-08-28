@@ -3,6 +3,7 @@ import type { Context, Next } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import {
   assertCanMessage,
+  bubbleForResident,
   composeCooldownReason,
   computeHot,
   isDemoPersona,
@@ -359,11 +360,35 @@ export function createApp(nowOrOptions: Date | CreateAppOptions = {}) {
     if (!resident) {
       return c.json(errorBody("not_found", "找不到这位居民"), 404);
     }
+    const actor = await actorOf(c);
+    if (!actor) {
+      return c.json(errorBody("unauthenticated", "请先登录"), 401);
+    }
     const presented = presentOne(resident, presence, clock());
     const house = await store.getHouseByResident(presented.id);
+    const isSelf = actor.id === presented.id;
+
+    // §4.4 wants one screen: who they are, what they last said, where they
+    // live, how we're related, and which door is open. The gate answer comes
+    // from the same assertCanMessage the write routes use, so the card never
+    // needs its own copy of the §5.4 matrix.
+    const gate = isSelf ? null : await gateMessage(actor, resident);
     const payload: ResidentHomeResponse = {
       resident: omitTruePresence(presented),
       house: house ?? null,
+      neighborhood: house ? ((await store.getNeighborhood(house.neighborhoodId)) ?? null) : null,
+      relation: {
+        isNeighbor: isSelf ? false : Boolean(await store.getNeighborEdge(actor.id, presented.id)),
+        blocking: isSelf ? false : Boolean(await store.getBlock(actor.id, presented.id)),
+        blockedBy: isSelf ? false : Boolean(await store.getBlock(presented.id, actor.id)),
+        isSelf,
+      },
+      latestBubble: bubbleForResident(presented.id, await store.listPosts(), clock()),
+      messageGate: gate
+        ? gate.ok
+          ? { ok: true, via: gate.via }
+          : { ok: false, code: gate.code }
+        : { ok: false, code: "forbidden" },
     };
     return c.json(payload);
   });

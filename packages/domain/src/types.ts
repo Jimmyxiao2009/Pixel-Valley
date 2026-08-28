@@ -322,9 +322,29 @@ export interface StreetRecommendedResponse {
   message: string | null;
 }
 
+/** What the §5.4 gate currently says for actor -> this resident. */
+export type MessageGateView =
+  | { ok: true; via: "knock" | "note" }
+  | { ok: false; code: "blocked" | "forbidden" | "dnd" };
+
+export interface ResidentRelationView {
+  /** NeighborEdge(me -> them) exists. */
+  isNeighbor: boolean;
+  /** I blocked them. */
+  blocking: boolean;
+  /** They blocked me. */
+  blockedBy: boolean;
+  isSelf: boolean;
+}
+
+/** §4.4: everything ResidentPeekCard must show on one screen. */
 export interface ResidentHomeResponse {
   resident: ObserverResident;
   house: House | null;
+  neighborhood: Neighborhood | null;
+  relation: ResidentRelationView;
+  latestBubble: BubbleView | null;
+  messageGate: MessageGateView;
 }
 
 export interface SeedWorld {
