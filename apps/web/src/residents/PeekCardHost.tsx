@@ -16,6 +16,8 @@ import { ResidentPeekCard, type PeekAction } from "./ResidentPeekCard";
 
 type PeekCardHostProps = {
   residentId: string;
+  /** Canonical street currently on screen, so the card can hide a no-op. */
+  currentNeighborhoodId?: string | null;
   onClose: () => void;
   /** Lets the surrounding scene refresh derived layouts after a relation change. */
   onRelationChanged?: () => void;
@@ -28,7 +30,12 @@ type Status = "loading" | "ready" | "error";
  * separate fetch state — the server returns it inside the view as a gate
  * verdict, and the card renders the refusal line.
  */
-export function PeekCardHost({ residentId, onClose, onRelationChanged }: PeekCardHostProps) {
+export function PeekCardHost({
+  residentId,
+  currentNeighborhoodId = null,
+  onClose,
+  onRelationChanged,
+}: PeekCardHostProps) {
   const navigate = useNavigate();
   const [status, setStatus] = useState<Status>("loading");
   const [view, setView] = useState<ResidentHomeResponse | null>(null);
@@ -99,6 +106,11 @@ export function PeekCardHost({ residentId, onClose, onRelationChanged }: PeekCar
         navigate(`/r/${action.residentId}`);
         return;
       }
+      if (action.type === "doorstep") {
+        // §3.10 / §12.4.2: their canonical street, camera on their real slot.
+        navigate(`/n/${action.neighborhoodId}?focusResidentId=${action.residentId}`);
+        return;
+      }
       // §3.6.3: the panel opens right here, on the real thread. The server
       // decides knock vs note, so the caller passes no `via`.
       void conversation.open(action.residentId);
@@ -161,6 +173,10 @@ export function PeekCardHost({ residentId, onClose, onRelationChanged }: PeekCar
         onAction={onAction}
         onToggleNeighbor={() => void onToggleNeighbor()}
         onBlockRequest={() => setConfirmBlock(true)}
+        onTheirStreet={
+          currentNeighborhoodId !== null &&
+          currentNeighborhoodId === view.resident.homeNeighborhoodId
+        }
         onClose={onClose}
       />
       {conversation.error ? (

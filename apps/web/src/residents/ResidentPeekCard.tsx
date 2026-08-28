@@ -12,6 +12,7 @@ import { ResidentAvatar } from "./ResidentAvatar";
 
 export type PeekAction =
   | { type: "enter"; residentId: string; isSelf: boolean }
+  | { type: "doorstep"; residentId: string; neighborhoodId: string }
   | { type: "message"; residentId: string; via: "knock" | "note" };
 
 type ResidentPeekCardProps = {
@@ -22,6 +23,8 @@ type ResidentPeekCardProps = {
   onAction: (action: PeekAction) => void;
   onToggleNeighbor: () => void;
   onBlockRequest?: () => void;
+  /** Set when the viewer is already standing on this resident's street. */
+  onTheirStreet?: boolean;
   onClose: () => void;
 };
 
@@ -32,6 +35,7 @@ export function ResidentPeekCard({
   onAction,
   onToggleNeighbor,
   onBlockRequest,
+  onTheirStreet = false,
   onClose,
 }: ResidentPeekCardProps) {
   const { resident, relation, neighborhood, latestBubble, messageGate } = view;
@@ -141,6 +145,24 @@ export function ResidentPeekCard({
             {gateRefusalText(messageGate.code, { blocking: relation.blocking })}
           </p>
         )}
+
+        {/* §3.10: put the person back in space. Only offered when we know
+            where they live and we are not already standing there. */}
+        {!isSelf && !onTheirStreet && resident.homeNeighborhoodId ? (
+          <button
+            type="button"
+            className={pixelFocusClass("map-sheet__action peek-card__cta")}
+            onClick={() =>
+              onAction({
+                type: "doorstep",
+                residentId: resident.id,
+                neighborhoodId: resident.homeNeighborhoodId!,
+              })
+            }
+          >
+            去 Ta 家门口
+          </button>
+        ) : null}
 
         {!isAi && !isSelf && !blockedEitherWay ? (
           <button

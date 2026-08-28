@@ -26,6 +26,7 @@ import { pixelFocusClass } from "../pixel/PixelFocusRing";
 import { ZONES } from "../town/zones";
 import { PixelStage } from "../pixel/PixelStage";
 import { computeLetterbox, MAP_LOGICAL_HEIGHT, MAP_LOGICAL_WIDTH } from "../pixel/integerScale";
+import { computeFocusPan } from "../map/focusPan";
 import { useElementSize } from "../pixel/useElementSize";
 import { usePrefersReducedMotion } from "../pixel/usePrefersReducedMotion";
 import { useSession } from "../session/SessionProvider";
@@ -74,6 +75,12 @@ export function NeighborhoodScene({ mode }: NeighborhoodSceneProps) {
   const [vacantToast, setVacantToast] = useState(false);
   // §3.8: the ride is a curtain over a navigation that is already decided.
   const [ridingTo, setRidingTo] = useState<TownZoneId | null>(null);
+  // §12.4.2 deep link. Only canonical streets consume it — the derived
+  // my-street layout is never rebuilt to satisfy a focus (KD-19).
+  const focusResidentId = mode === "canonical" ? params.get("focusResidentId") : null;
+  const [focusMissing, setFocusMissing] = useState(false);
+  const [focusFaded, setFocusFaded] = useState(false);
+  const focusAppliedRef = useRef<string | null>(null);
 
   const homeNeighborhoodId = me?.resident.homeNeighborhoodId ?? null;
   const showMap = slice === null || slice === "mine";
@@ -85,11 +92,15 @@ export function NeighborhoodScene({ mode }: NeighborhoodSceneProps) {
     }
     let cancelled = false;
     setStatus("loading");
+    setFocusMissing(false);
+    focusAppliedRef.current = null;
     const request =
       mode === "mine"
         ? fetchStreetMine()
         : neighborhoodId
-          ? fetchNeighborhood(neighborhoodId)
+          ? fetchNeighborhood(neighborhoodId, {
+              focusResidentId: focusResidentId ?? undefined,
+            })
           : Promise.reject(new Error("missing-id"));
     void request
       .then((payload) => {
@@ -100,7 +111,11 @@ export function NeighborhoodScene({ mode }: NeighborhoodSceneProps) {
           setMine(payload as StreetMineResponse);
           setCanonical(null);
         } else {
-          setCanonical(payload as NeighborhoodView);
+          const view = payload as NeighborhoodView;
+          setCanonical(view);
+          // §12.4.2: asked for someone who does not live here — say so, and
+          // leave the street exactly as it is.
+          setFocusMissing(Boolean(focusResidentId) && view.focus === null);
         }
         setStatus("ready");
       })
@@ -112,7 +127,7 @@ export function NeighborhoodScene({ mode }: NeighborhoodSceneProps) {
     return () => {
       cancelled = true;
     };
-  }, [mode, neighborhoodId, showMap, reload]);
+  }, [mode, neighborhoodId, showMap, reload, focusResidentId]);
 
   useEffect(() => {
     if (!ui) {
@@ -131,6 +146,48 @@ export function NeighborhoodScene({ mode }: NeighborhoodSceneProps) {
   const overflowY = Math.max(0, box.stageHeight - size.height);
   const panX = Math.min(pan.x, overflowX);
   const panY = Math.min(pan.y, overflowY);
+
+  const focus = canonical?.focus ?? null;
+  const focusName =
+    focus && canonical
+      ? (canonical.residents.find((resident) => resident.id === focus.residentId)?.displayName ??
+        "这位居民")
+      : null;
+
+  // Move the camera onto the slot the server reported. The houses never move
+  // (KD-19); only the viewport does. Runs once per focus, and again after a
+  // resize, so a re-render cannot fight the resident's own panning.
+  useEffect(() => {
+    if (!focus || size.width === 0) {
+      return;
+    }
+    const key = `${focus.residentId}:${box.scale}:${size.width}x${size.height}`;
+    if (focusAppliedRef.current === key) {
+      return;
+    }
+    focusAppliedRef.current = key;
+    setPan(
+      computeFocusPan({
+        slotIndex: focus.slotIndex,
+        scale: box.scale,
+        stageWidth: box.stageWidth,
+        stageHeight: box.stageHeight,
+        viewportWidth: size.width,
+        viewportHeight: size.height,
+        currentPan: { x: pan.x, y: pan.y },
+      }),
+    );
+  }, [focus, box.scale, box.stageWidth, box.stageHeight, size.width, size.height, pan.x, pan.y]);
+
+  // §15.3: the arrival note fades on its own and changes nothing else.
+  useEffect(() => {
+    if (!focusName) {
+      return;
+    }
+    const timer = window.setTimeout(() => setFocusFaded(true), 4000);
+    setFocusFaded(false);
+    return () => window.clearTimeout(timer);
+  }, [focusName, focus?.residentId]);
 
   const onHostPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (overflowX <= 0 && overflowY <= 0) {
@@ -233,6 +290,20 @@ export function NeighborhoodScene({ mode }: NeighborhoodSceneProps) {
   return (
     <div className="pv-scene-column">
       <div className="pv-map-chrome">
+        {/* §3.10: visiting someone else's canonical street needs an explicit way
+            home. /street is the derived my-street, never /n/{myHomeStreet}. */}
+        {mode === "canonical" && neighborhoodId !== homeNeighborhoodId ? (
+          <div className="street-visiting">
+            <p className="street-visiting__where font-pixel">在{streetName}做客</p>
+            <button
+              type="button"
+              className={pixelFocusClass("street-visiting__back")}
+              onClick={() => navigate("/street")}
+            >
+              回我的街
+            </button>
+          </div>
+        ) : null}
         <div className="street-tabs" role="tablist" aria-label="街分片">
           <NavLink
             to="/street"
@@ -332,6 +403,7 @@ export function NeighborhoodScene({ mode }: NeighborhoodSceneProps) {
                   residents={residents}
                   bubbles={bubbles}
                   meId={me.resident.id}
+                  focusSlotIndex={focus?.slotIndex ?? null}
                   reduceMotion={reduceMotion}
                   ignoreClickRef={ignoreClickRef}
                   onUi={onUi}
@@ -361,6 +433,16 @@ export function NeighborhoodScene({ mode }: NeighborhoodSceneProps) {
               已经贴在房顶上了。
             </p>
           ) : null}
+          {focusName && !focusFaded ? (
+            <p className="map-toast map-toast--focus font-pixel" role="status" aria-live="polite">
+              找到{focusName}的家了。
+            </p>
+          ) : null}
+          {focusMissing ? (
+            <p className="map-toast map-toast--focus font-pixel" role="status" aria-live="polite">
+              这家不在这条街上。
+            </p>
+          ) : null}
           {quiet ? (
             <p className="map-toast font-pixel" role="status">
               这条街这会儿很安静
@@ -385,6 +467,7 @@ export function NeighborhoodScene({ mode }: NeighborhoodSceneProps) {
           {ui.type === "peek" ? (
             <PeekCardHost
               residentId={ui.residentId}
+              currentNeighborhoodId={mode === "canonical" ? (neighborhoodId ?? null) : null}
               onClose={() => setUi(null)}
               onRelationChanged={() => setReload((n) => n + 1)}
             />

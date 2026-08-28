@@ -1523,3 +1523,27 @@ a {
     animation: none;
   }
 }
+
+/* §3.10: standing on someone else's canonical street. */
+.street-visiting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--pv-wall);
+  border-bottom: 2px solid var(--pv-ink);
+}
+
+.street-visiting__where {
+  margin: 0;
+  font-size: 12px;
+}
+
+.street-visiting__back {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 2px solid var(--pv-ink);
+  background: var(--pv-paper);
+  color: var(--pv-ink);
+}

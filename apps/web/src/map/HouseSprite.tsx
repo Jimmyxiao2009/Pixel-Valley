@@ -9,6 +9,8 @@ type HouseSpriteProps = {
   ai?: boolean;
   self?: boolean;
   overlay?: boolean;
+  /** §12.4.2: the house this visit came looking for. */
+  focused?: boolean;
   presence: Presence;
   stagger: number;
   reduceMotion: boolean;
@@ -21,6 +23,7 @@ export function HouseSprite({
   ai = false,
   self = false,
   overlay = false,
+  focused = false,
   presence,
   stagger,
   reduceMotion,
@@ -33,6 +36,7 @@ export function HouseSprite({
     self ? "map-house--self" : "",
     ai ? "map-house--ai" : "",
     overlay ? "map-house--overlay" : "",
+    focused ? "map-house--focused" : "",
     reduceMotion ? "is-instant" : "",
   ]
     .filter(Boolean)
@@ -43,7 +47,7 @@ export function HouseSprite({
       type="button"
       className={pixelFocusClass(className)}
       style={{ left: origin.x, top: origin.y, ["--stagger" as string]: String(stagger) }}
-      aria-label={self ? `${name}的家，回屋里` : `${name}的家`}
+      aria-label={`${name}的家${focused ? "，你要找的就是这家" : ""}${self ? "，回屋里" : ""}`}
       onClick={onActivate}
     >
       <span className="map-house__sprite" aria-hidden="true">

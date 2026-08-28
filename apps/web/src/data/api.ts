@@ -79,8 +79,16 @@ export function fetchStreetMine(): Promise<StreetMineResponse> {
   return apiRequest<StreetMineResponse>("/api/street/mine");
 }
 
-export function fetchNeighborhood(id: string): Promise<NeighborhoodView> {
-  return apiRequest<NeighborhoodView>(`/api/neighborhoods/${id}`);
+export function fetchNeighborhood(
+  id: string,
+  options: { focusResidentId?: string; signal?: AbortSignal } = {},
+): Promise<NeighborhoodView> {
+  const query = options.focusResidentId
+    ? `?focusResidentId=${encodeURIComponent(options.focusResidentId)}`
+    : "";
+  return apiRequest<NeighborhoodView>(`/api/neighborhoods/${id}${query}`, {
+    signal: options.signal,
+  });
 }
 
 export function fetchResidentHome(id: string): Promise<ResidentHomeResponse> {

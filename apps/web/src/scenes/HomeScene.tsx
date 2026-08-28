@@ -158,8 +158,10 @@ export function HomeScene({ mode = "owner" }: HomeSceneProps) {
 
   function onDoor() {
     if (isGuest) {
-      if (hostNeighborhoodId) {
-        navigate(`/n/${hostNeighborhoodId}`);
+      if (hostNeighborhoodId && host) {
+        // §3.5 / §12.4.2: stepping out of someone's home leaves you at their
+        // door, not at a random point on their street.
+        navigate(`/n/${hostNeighborhoodId}?focusResidentId=${host.id}`);
       }
       return;
     }

@@ -32,6 +32,7 @@ type MapStageProps = {
   residents: readonly ObserverResident[];
   bubbles: readonly BubbleView[];
   meId: string;
+  focusSlotIndex?: number | null;
   reduceMotion: boolean;
   ignoreClickRef: { current: boolean };
   onUi: (ui: MapUi) => void;
@@ -43,6 +44,7 @@ export function MapStage({
   residents,
   bubbles,
   meId,
+  focusSlotIndex = null,
   reduceMotion,
   ignoreClickRef,
   onUi,
@@ -225,6 +227,7 @@ export function MapStage({
             ai={resident?.kind === "ai"}
             self={lot.kind === "self" || lot.residentId === meId}
             overlay={lot.kind === "overlay-ai" || lot.overlay}
+            focused={lot.slotIndex === focusSlotIndex}
             presence={presence}
             stagger={lot.slotIndex}
             reduceMotion={reduceMotion}
