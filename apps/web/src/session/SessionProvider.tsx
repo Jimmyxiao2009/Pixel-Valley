@@ -10,7 +10,8 @@ type SessionContextValue = {
   me: MeResponse | null;
   login: (persona: DemoPersona) => Promise<void>;
   logout: () => Promise<void>;
-  refresh: () => Promise<void>;
+  /** Resolves with the freshly fetched session so callers can branch on server truth. */
+  refresh: () => Promise<MeResponse | null>;
 };
 
 const SessionContext = createContext<SessionContextValue | null>(null);
@@ -19,14 +20,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<SessionStatus>("loading");
   const [me, setMe] = useState<MeResponse | null>(null);
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (): Promise<MeResponse | null> => {
     try {
       const next = await fetchMe();
       setMe(next);
       setStatus("authenticated");
+      return next;
     } catch {
       setMe(null);
       setStatus("unauthenticated");
+      return null;
     }
   }, []);
 
