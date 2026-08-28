@@ -20,6 +20,15 @@ if (!window.matchMedia) {
   })) as unknown as typeof window.matchMedia;
 }
 
+// jsdom has no ResizeObserver; useElementSize measures the stage with it.
+if (!window.ResizeObserver) {
+  window.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as unknown as typeof window.ResizeObserver;
+}
+
 // jsdom has no rAF-driven layout; MapStage lerps with it.
 if (!window.requestAnimationFrame) {
   window.requestAnimationFrame = ((callback: FrameRequestCallback) =>
