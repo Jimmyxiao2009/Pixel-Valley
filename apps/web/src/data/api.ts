@@ -92,3 +92,7 @@ export function createPost(input: { content: string; tag?: ClosedTag | null }): 
     body: JSON.stringify(body),
   });
 }
+
+export function fetchPost(id: string): Promise<{ post: Post; author: ObserverResident | null }> {
+  return apiRequest(`/api/posts/${id}`);
+}

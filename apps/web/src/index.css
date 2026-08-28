@@ -1,6 +1,7 @@
 @import "./pixel/tokens.css";
 @import "./pixel/fonts.css";
 @import "./pixel/focus.css";
+@import "./map/map.css";
 
 *,
 *::before,
@@ -107,10 +108,10 @@ a {
   height: 48px;
   margin: 0;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: stretch;
+  justify-content: stretch;
   flex-shrink: 0;
-  padding: 0 12px;
+  padding: 0;
   color: var(--pv-ink);
   background: var(--pv-paper);
   border-bottom: 2px solid var(--pv-soil);
@@ -236,34 +237,6 @@ a {
   bottom: 64px;
   background: var(--pv-roof-ai);
   color: var(--pv-paper);
-}
-
-.map-stage {
-  width: 224px;
-  height: 192px;
-  padding: 48px 16px 0;
-  background: var(--pv-soil);
-}
-
-.map-stage__tiles {
-  display: grid;
-  grid-template-columns: repeat(4, 48px);
-  grid-template-rows: repeat(3, 48px);
-  width: 192px;
-  height: 144px;
-}
-
-.map-tile {
-  box-sizing: border-box;
-  width: 48px;
-  height: 48px;
-  background: var(--pv-grass);
-  border: 1px solid #3d562c;
-}
-
-.map-tile--path {
-  background: var(--pv-soil);
-  border-color: #5a3820;
 }
 
 .feed-scene {
