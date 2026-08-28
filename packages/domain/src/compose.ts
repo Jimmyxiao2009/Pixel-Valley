@@ -1,15 +1,13 @@
-import type { ClosedTag, Post } from "./types.ts";
-
-export const CLOSED_TAGS: readonly ClosedTag[] = ["闲聊", "技术", "生活", "镇务", "读书"];
+// CLOSED_TAGS / isClosedTag live next to the ClosedTag type in types.ts, and
+// shanghaiDateKey lives in time.ts. Imported here, never re-exported, so the
+// package root exposes exactly one definition of each.
+import { shanghaiDateKey } from "./time.ts";
+import { isClosedTag, type ClosedTag, type Post } from "./types.ts";
 
 export const POST_CONTENT_MAX = 500;
 export const COMPOSE_GAP_MS = 10_000;
 export const COMPOSE_DAILY_LIMIT = 30;
 export const COMPOSE_TIME_ZONE = "Asia/Shanghai";
-
-export function isClosedTag(value: unknown): value is ClosedTag {
-  return typeof value === "string" && (CLOSED_TAGS as readonly string[]).includes(value);
-}
 
 export function countPlainTextChars(text: string): number {
   return Array.from(text).length;
@@ -17,15 +15,6 @@ export function countPlainTextChars(text: string): number {
 
 export function clampPostContent(text: string): string {
   return Array.from(text).slice(0, POST_CONTENT_MAX).join("");
-}
-
-export function shanghaiDateKey(date: Date, timeZone = COMPOSE_TIME_ZONE): string {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date);
 }
 
 export type ShortPostInput = {

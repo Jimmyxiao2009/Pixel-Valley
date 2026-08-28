@@ -29,7 +29,7 @@ export function BookshelfSheet({ resident, initialTab = "posts", onClose }: Book
     void fetchResidentPosts(resident.id)
       .then((result) => {
         if (!cancelled) {
-          setPosts(result.posts);
+          setPosts(result.items);
         }
       })
       .catch(() => {

@@ -67,7 +67,7 @@ function civicDecorKind(slotIndex: number): TileKind {
   return "tree";
 }
 
-function tilesFor(
+export function tilesFor(
   neighborhood: Neighborhood,
   houses: House[],
 ): NeighborhoodTile[] {

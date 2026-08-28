@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
-  CLOSED_TAGS,
   COMPOSE_DAILY_LIMIT,
   COMPOSE_GAP_MS,
   composeCooldownReason,
   countPlainTextChars,
   POST_CONTENT_MAX,
-  shanghaiDateKey,
   validateShortPost,
 } from "./compose.ts";
+import { shanghaiDateKey } from "./time.ts";
+import { CLOSED_TAGS } from "./types.ts";
 
 describe("validateShortPost", () => {
   it("rejects empty, whitespace, and non-string content", () => {

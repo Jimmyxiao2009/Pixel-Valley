@@ -29,16 +29,21 @@ export function excerptUnits(text: string): number {
   return graphemes(text).reduce((sum, part) => sum + graphemeUnits(part), 0);
 }
 
+/** Alias kept so both call sites (§3.3 excerpt work and the API feed work) share one implementation. */
+export const countUnits = excerptUnits;
+export const graphemeUnit = graphemeUnits;
+
 function isPunctGrapheme(grapheme: string): boolean {
   return PUNCT.has(grapheme);
 }
 
 export function excerpt(text: string, options: ExcerptOptions = {}): string {
-  if (text.length === 0) {
+  const source = text.trim();
+  if (source.length === 0) {
     return options.hasImage ? "（一张图）" : "（空）";
   }
 
-  const parts = graphemes(text);
+  const parts = graphemes(source);
   const weights = parts.map(graphemeUnits);
 
   let end = 0;

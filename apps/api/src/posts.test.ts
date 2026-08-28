@@ -6,9 +6,13 @@ import {
   RESIDENT_YOU,
   type MeResponse,
   type Post,
+  type ResidentHomeResponse,
   type ResidentPostsResponse,
 } from "@pixel-valley/domain";
-import { createApp, type AppClock } from "./app.ts";
+import { createApp } from "./app.ts";
+
+/** Kept from the PR-3 line; createApp now takes a plain () => Date clock. */
+type AppClock = { now: () => Date };
 
 const NOW = new Date("2026-08-26T12:00:00.000Z");
 
@@ -21,7 +25,7 @@ function cookieFrom(response: Response): string {
 }
 
 async function login(persona: "you" | "lin", clock?: AppClock) {
-  const app = createApp(NOW, clock ?? { now: () => NOW });
+  const app = createApp({ now: NOW, clock: (clock ?? { now: () => NOW }).now });
   const response = await app.request("/api/auth/demo", {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -60,8 +64,8 @@ describe("POST /api/posts", () => {
     const list = await app.request(`/api/residents/${RESIDENT_YOU}/posts`, { headers: { cookie } });
     expect(list.status).toBe(200);
     const listed = (await list.json()) as ResidentPostsResponse;
-    expect(listed.posts[0]?.id).toBe(post.id);
-    expect(listed.posts[0]?.content).toBe("今晚灯很暖");
+    expect(listed.items[0]?.id).toBe(post.id);
+    expect(listed.items[0]?.content).toBe("今晚灯很暖");
   });
 
   it("returns 401 without a session", async () => {
@@ -129,13 +133,14 @@ describe("GET /api/residents/:id", () => {
     const { app, cookie } = await login("you");
     const resident = await app.request("/api/residents/lin", { headers: { cookie } });
     expect(resident.status).toBe(200);
-    const body = (await resident.json()) as { id: string; truePresence?: unknown };
-    expect(body.id).toBe("lin");
-    expect(body).not.toHaveProperty("truePresence");
+    const body = (await resident.json()) as ResidentHomeResponse;
+    expect(body.resident.id).toBe("lin");
+    expect(body.resident).not.toHaveProperty("truePresence");
+    expect(body.house?.neighborhoodId).toBe("wutong");
 
     const posts = await app.request("/api/residents/lin/posts", { headers: { cookie } });
     const listed = (await posts.json()) as ResidentPostsResponse;
-    expect(listed.posts.some((post) => post.content.includes("bug"))).toBe(true);
-    expect(listed.posts.every((post) => post.deletedAt === null)).toBe(true);
+    expect(listed.items.some((post) => post.content.includes("bug"))).toBe(true);
+    expect(listed.items.every((post) => post.deletedAt === null)).toBe(true);
   });
 });

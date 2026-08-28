@@ -6,6 +6,8 @@ import type {
   NeighborhoodView,
   ObserverResident,
   Post,
+  Reply,
+  ResidentHomeResponse,
   ResidentPostsResponse,
   StreetMineResponse,
 } from "@pixel-valley/domain";
@@ -73,8 +75,13 @@ export function fetchNeighborhood(id: string): Promise<NeighborhoodView> {
   return apiRequest<NeighborhoodView>(`/api/neighborhoods/${id}`);
 }
 
-export function fetchResident(id: string): Promise<ObserverResident> {
-  return apiRequest<ObserverResident>(`/api/residents/${id}`);
+export function fetchResidentHome(id: string): Promise<ResidentHomeResponse> {
+  return apiRequest<ResidentHomeResponse>(`/api/residents/${id}`);
+}
+
+/** Convenience unwrap: most callers only need the nameplate/presence fields. */
+export async function fetchResident(id: string): Promise<ObserverResident> {
+  return (await fetchResidentHome(id)).resident;
 }
 
 export function fetchResidentPosts(id: string, cursor?: string): Promise<ResidentPostsResponse> {
@@ -93,6 +100,8 @@ export function createPost(input: { content: string; tag?: ClosedTag | null }): 
   });
 }
 
-export function fetchPost(id: string): Promise<{ post: Post; author: ObserverResident | null }> {
+export function fetchPost(
+  id: string,
+): Promise<{ post: Post; author: ObserverResident | null; replies: Reply[] }> {
   return apiRequest(`/api/posts/${id}`);
 }
