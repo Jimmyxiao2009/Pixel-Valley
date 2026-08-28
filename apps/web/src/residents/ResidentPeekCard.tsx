@@ -9,7 +9,7 @@ import { pixelFocusClass } from "../pixel/PixelFocusRing";
 import { ResidentAvatar } from "./ResidentAvatar";
 
 export type PeekAction =
-  | { type: "enter"; residentId: string }
+  | { type: "enter"; residentId: string; isSelf: boolean }
   | { type: "message"; residentId: string; via: "knock" | "note" };
 
 type ResidentPeekCardProps = {
@@ -62,6 +62,7 @@ export function ResidentPeekCard({
   }, [resident.id]);
 
   const isAi = resident.kind === "ai";
+  const isSelf = relation.isSelf;
   const blockedEitherWay = relation.blocking || relation.blockedBy;
   const identity = residentKindText(resident);
   const presence = presenceText(resident.observerPresence, resident);
@@ -128,12 +129,16 @@ export function ResidentPeekCard({
         <button
           type="button"
           className={pixelFocusClass("map-sheet__close peek-card__cta")}
-          onClick={() => onAction({ type: "enter", residentId: resident.id })}
+          onClick={() => onAction({ type: "enter", residentId: resident.id, isSelf })}
         >
           进屋坐坐
         </button>
 
-        {messageGate.ok ? (
+        {isSelf ? (
+          <p className="peek-card__refusal font-body" role="note">
+            这是你自己的家
+          </p>
+        ) : messageGate.ok ? (
           <button
             type="button"
             className={pixelFocusClass("map-sheet__action peek-card__cta")}
@@ -149,7 +154,7 @@ export function ResidentPeekCard({
           </p>
         )}
 
-        {!isAi && !blockedEitherWay ? (
+        {!isAi && !isSelf && !blockedEitherWay ? (
           <button
             type="button"
             className={pixelFocusClass("map-sheet__action peek-card__cta")}

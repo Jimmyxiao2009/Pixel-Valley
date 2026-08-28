@@ -20,6 +20,16 @@ if (!window.matchMedia) {
   })) as unknown as typeof window.matchMedia;
 }
 
+// jsdom implements no Pointer Capture; MapStage/NeighborhoodScene pan with it.
+for (const name of ["hasPointerCapture", "setPointerCapture", "releasePointerCapture"] as const) {
+  if (!(name in Element.prototype)) {
+    Object.defineProperty(Element.prototype, name, {
+      configurable: true,
+      value: name === "hasPointerCapture" ? () => false : () => {},
+    });
+  }
+}
+
 // jsdom has no ResizeObserver; useElementSize measures the stage with it.
 if (!window.ResizeObserver) {
   window.ResizeObserver = class {

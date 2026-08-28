@@ -50,6 +50,8 @@ export function HomeScene({ mode = "owner" }: HomeSceneProps) {
   const wowFiredRef = useRef(false);
 
   const self = me?.resident ?? null;
+  const selfId = self?.id ?? null;
+  const selfNeighborhoodId = self?.homeNeighborhoodId ?? null;
   const host = hostView?.resident ?? null;
   const roomResident = isGuest ? host : self;
   const heading = isGuest ? "访客房" : "我的家";
@@ -104,7 +106,7 @@ export function HomeScene({ mode = "owner" }: HomeSceneProps) {
     return () => {
       cancelled = true;
     };
-  }, [isGuest, residentId, self, reloadToken]);
+  }, [isGuest, residentId, selfId, selfNeighborhoodId, reloadToken]);
 
   useEffect(() => {
     if (!toast) {
@@ -191,7 +193,9 @@ export function HomeScene({ mode = "owner" }: HomeSceneProps) {
 
   function hotspotLabel(id: HotspotId): string {
     if (id === "window") {
-      return windowName;
+      // Visiting, the window is the host's nameplate wall, so the accessible
+      // name has to say that too — not just the hint bar.
+      return isGuest ? "看看门牌上写了什么" : windowName;
     }
     if (id === "computer" && isGuest) {
       return "看看 Ta 最近写了什么";

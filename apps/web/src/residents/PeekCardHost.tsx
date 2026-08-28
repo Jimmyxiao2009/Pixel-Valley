@@ -86,7 +86,12 @@ export function PeekCardHost({ residentId, onClose, onRelationChanged }: PeekCar
   const onAction = useCallback(
     (action: PeekAction) => {
       if (action.type === "enter") {
-        // §3.5: visits are analytics only, and must not gate the navigation.
+        // §3.5: your own front door is /home, never a guest room of yourself.
+        if (action.isSelf) {
+          navigate("/home");
+          return;
+        }
+        // Visits are analytics only, and must not gate the navigation.
         void recordVisit(action.residentId).catch(() => {});
         navigate(`/r/${action.residentId}`);
         return;
